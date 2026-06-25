@@ -1,0 +1,100 @@
+stages:
+  - quality
+  - syntax
+
+variables:
+  PHP_IMAGE: registry.gitlab.gingerminds.fr/gm/docker-images/php-8.4-fpm-node-22-composer-2
+
+# Évite les pipelines en doublon (Push de branche et Merge Request)
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_COMMIT_BRANCH
+
+.rules-qa:
+  rules:
+    # 1. Toujours lancer sur les Merge Requests vers master, develop, release
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && ($CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "develop" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^release/)
+    # 2. Lancer sur push direct (branches master, develop, release)
+    #    On essaie d'exclure les messages de merge auto de GitLab pour éviter les doublons après MR
+    - if: $CI_PIPELINE_SOURCE == "push" && ($CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "develop" || $CI_COMMIT_BRANCH =~ /^release/) && $CI_COMMIT_TITLE !~ /^Merge branch.*/
+      when: on_success
+
+.php-qa-base:
+  extends: .rules-qa
+  image: $PHP_IMAGE
+  cache:
+    key:
+      files:
+        - composer.lock
+    paths:
+      - vendor/
+  before_script:
+    - composer install --prefer-dist --no-ansi --no-interaction --no-progress --no-scripts
+
+sonarqube:
+  stage: quality
+  extends: .rules-qa
+  image:
+    name: sonarsource/sonar-scanner-cli:11
+    entrypoint: [ "" ]
+  cache:
+    policy: pull-push
+    key: "sonar-cache-$CI_COMMIT_REF_SLUG"
+    paths:
+      - "${SONAR_USER_HOME}/cache"
+      - sonar-scanner/
+  script:
+    - sonar-scanner
+
+# Code Quality Analysis Jobs
+phpstan:
+  stage: syntax
+  extends: .php-qa-base
+  script:
+    - echo "🔍 Running PHPStan analysis..."
+    - mkdir -p qa-reports
+    - mkdir -p database
+    - touch database/database.sqlite
+    - PHPSTAN_CONFIG="phpstan.neon"
+    - vendor/bin/phpstan analyse --configuration="$PHPSTAN_CONFIG" --memory-limit=1G --error-format=json > qa-reports/phpstan-report.json
+  artifacts:
+    paths:
+      - qa-reports/phpstan-report.json
+    expire_in: 1 week
+    when: always
+
+rector:
+  stage: syntax
+  extends: .php-qa-base
+  script:
+    - echo "🛠 Running Rector analysis..."
+    - mkdir -p qa-reports
+    - export PHP_CS_FIXER_IGNORE_ENV=1
+    - vendor/bin/rector process --dry-run --memory-limit=1G --ansi --output-format=json > qa-reports/rector-report.json || (cat qa-reports/rector-report.json && exit 1)
+  artifacts:
+    paths:
+      - qa-reports/rector-report.json
+    expire_in: 1 week
+    when: always
+
+phpcs:
+  stage: syntax
+  extends: .php-qa-base
+  script:
+    - echo "🔍 Running PHP_CodeSniffer..."
+    - mkdir -p qa-reports
+    # Lancer phpcs avec ton fichier de config phpcs.xml
+    - |
+      vendor/bin/phpcs --standard=phpcs.xml --report=json > qa-reports/phpcs-report.json || {
+        echo "❌ PHP_CodeSniffer found errors. Summary:"
+        vendor/bin/phpcs --standard=phpcs.xml --report=summary
+        exit 1
+      }
+  artifacts:
+    paths:
+      - qa-reports/phpcs-report.json
+    expire_in: 1 week
+    when: always

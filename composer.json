@@ -1,0 +1,36 @@
+{
+    "name": "gingerminds/laravel-cms",
+    "description": "CMS functionalities for Laravel projects",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Gingerminds\\LaravelCms\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Gingerminds"
+        }
+    ],
+    "require": {
+        "php": "^8.4",
+        "gingerminds/laravel-core": "^2.5 || dev-develop"
+    },
+    "require-dev": {
+        "larastan/larastan": "^3.8",
+        "orchestra/testbench": "^10.0",
+        "phpstan/phpstan": "^2.0",
+        "squizlabs/php_codesniffer": "^3.0",
+        "friendsofphp/php-cs-fixer": "^3.0",
+        "rector/rector": "^2.0",
+        "phpdocumentor/type-resolver": "^1.8"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Gingerminds\\LaravelCms\\Providers\\LaravelCmsServiceProvider"
+            ]
+        }
+    }
+}
