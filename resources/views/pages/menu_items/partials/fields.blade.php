@@ -4,7 +4,7 @@
             <div class="row">
                 <x-gingerminds-core::form.inputs.basic
                         id="code"
-                        :label="__('gingerminds-core::translation.form.name')"
+                        :label="__('gingerminds-core::translation.form.code')"
                         :required="true"
                         value="{{ old('name', isset($menuItem) ? $menuItem->code : null) }}"
                     />

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gingerminds\LaravelCms\Http\Request\Menu;
 
 use Gingerminds\LaravelCore\Http\Requests\FormRequestInterface;
+use Gingerminds\LaravelMultisite\Services\Context\SiteContext;
 use Illuminate\Foundation\Http\FormRequest;
 
 class MenuItemRequest extends FormRequest implements FormRequestInterface
@@ -23,12 +24,43 @@ class MenuItemRequest extends FormRequest implements FormRequestInterface
             'translations'    => 'required|array',
         ];
 
+        $defaultLanguageId = app(SiteContext::class)->site()?->defaultLanguage()->first()?->id;
+
         foreach ($this->input('translations', []) as $langId => $fields) {
             foreach ($fields as $field => $value) {
-                $rules["translations.$langId.$field"] = ['nullable'];
+                if ($langId === $defaultLanguageId && $field !== 'description') {
+                    $rules["translations.$langId.$field"] = ['required', 'string'];
+                } else {
+                    $rules["translations.$langId.$field"] = ['nullable', 'string'];
+                }
             }
         }
 
         return $rules;
+    }
+
+    public function attributes(): array
+    {
+        $attributes = [];
+
+        $labels = [
+            'name'        => __('gingerminds-core::translation.form.name'),
+            'url'         => __('gingerminds-cms::translation.form.url'),
+            'description' => __('gingerminds-core::translation.form.description'),
+        ];
+
+        $languages = app(SiteContext::class)->site()->languages ?? collect();
+
+        foreach ($this->input('translations', []) as $langId => $fields) {
+            $language      = $languages->firstWhere('id', $langId);
+            $languageLabel = $language->iso ?? $langId;
+
+            foreach ($fields as $field => $value) {
+                $fieldLabel                                = $labels[$field] ?? $field;
+                $attributes["translations.$langId.$field"] = "$fieldLabel ($languageLabel)";
+            }
+        }
+
+        return $attributes;
     }
 }

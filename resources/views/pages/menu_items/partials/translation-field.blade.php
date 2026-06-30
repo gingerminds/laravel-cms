@@ -2,7 +2,7 @@
     <x-gingerminds-core::form.inputs.basic
         id="translations_{{ $language->id }}_name"
         label="{{ __('gingerminds-core::translation.form.name') }}"
-        :required="false"
+        :required="$required"
         name="translations[{{ $language->id }}][name]"
         value="{{ old('translations.'.$language->id.'.name', $translation?->name) }}"
     />
@@ -12,7 +12,7 @@
         type="text"
         id="translations_{{ $language->id }}_url"
         label="{{ __('gingerminds-cms::translation.form.url') }}"
-        :required="false"
+        :required="$required"
         name="translations[{{ $language->id }}][url]"
         value="{{ old('translations.'.$language->id.'.url', $translation?->url) }}"
     />

@@ -4,7 +4,6 @@ namespace Gingerminds\LaravelCms\Http\Controllers\Menu;
 
 use Gingerminds\LaravelCms\Http\Request\Menu\MenuItemReorderRequest;
 use Gingerminds\LaravelCms\Http\Request\Menu\MenuItemRequest;
-use Gingerminds\LaravelCms\Http\Request\Menu\MenuRequest;
 use Gingerminds\LaravelCms\Models\Menu\Menu;
 use Gingerminds\LaravelCms\Models\Menu\MenuItem\MenuItem;
 use Gingerminds\LaravelCms\Models\Menu\MenuItem\MenuItemTranslation;
@@ -54,10 +53,13 @@ class MenuItemController extends AbstractController
         /** @var view-string $view */
         $view = 'gingerminds-cms::pages.menu_items.create';
 
+        $site = app(SiteContext::class)->site();
+
         return view($view, [
-            'menu'      => $menu,
-            'languages' => app(SiteContext::class)->site()?->languages,
-            'menuItems' => $this->menuItemRepository->get($request),
+            'menu'            => $menu,
+            'defaultLanguage' => $site?->defaultLanguage()->first(),
+            'languages'       => $site?->languages,
+            'menuItems'       => $this->menuItemRepository->get($request),
         ]);
     }
 
@@ -66,14 +68,17 @@ class MenuItemController extends AbstractController
         /** @var view-string $view */
         $view = 'gingerminds-cms::pages.menu_items.edit';
 
+        $site = app(SiteContext::class)->site();
+
         return view($view, [
-            'menuItem'  => $menuItem,
-            'languages' => app(SiteContext::class)->site()?->languages,
-            'menuItems' => $this->menuItemRepository->get($request),
+            'menuItem'        => $menuItem,
+            'defaultLanguage' => $site?->defaultLanguage()->first(),
+            'languages'       => $site?->languages,
+            'menuItems'       => $this->menuItemRepository->get($request),
         ]);
     }
 
-    public function store(MenuRequest $request, Menu $menu): RedirectResponse
+    public function store(MenuItemRequest $request, Menu $menu): RedirectResponse
     {
         $this->authorize('create', ResourceResolver::model('menu_item'));
 
