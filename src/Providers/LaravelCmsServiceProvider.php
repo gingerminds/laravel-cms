@@ -106,6 +106,13 @@ class LaravelCmsServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__ . '/../../config/gingerminds-cms.php' => config_path('gingerminds-cms.php'),
         ], 'gingerminds-cms-config');
+
+        // Publication des assets JS (pas de SCSS dans ce package)
+        if ($this->app->runningInConsole()) {
+            $this->publishes([
+                __DIR__ . '/../../resources/js' => resource_path('js/vendor/gingerminds-cms'),
+            ], 'gingerminds-assets');
+        }
     }
 
     private function tagClassesFromPath(string $path, string $namespace, string $interface): void

@@ -18,8 +18,8 @@
     };
 
     $fieldName = $name ?? $id;
-    $presetConfig = config('gingerminds-cms.tiptap.presets.' . $preset)
-        ?? config('gingerminds-cms.tiptap.presets.default');
+    $presetConfig = config('gingerminds-cms.wysiwyg.presets.' . $preset)
+        ?? config('gingerminds-cms.wysiwyg.presets.default');
 @endphp
 
 <style>

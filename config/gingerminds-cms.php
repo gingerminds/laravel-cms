@@ -9,11 +9,11 @@ use Gingerminds\LaravelCms\Models\Menu\Menu;
 use Gingerminds\LaravelCms\Models\Menu\MenuItem\MenuItem;
 use Gingerminds\LaravelCms\Repositories\Menu\MenuItemRepository;
 use Gingerminds\LaravelCms\Repositories\Menu\MenuRepository;
-use Gingerminds\LaravelCms\ApiProvider\MenuProvider;
+use Gingerminds\LaravelCms\ApiProvider\Menu\MenuProvider;
 use Gingerminds\LaravelCms\Http\Request\Menu\MenuRequest;
 
 return [
-    'tiptap' => [
+    'wysiwyg' => [
         'presets' => [
             'default' => [
                 'extensions' => ['bold', 'italic', 'underline', 'strike', 'link', 'bulletList', 'orderedList', 'history'],
