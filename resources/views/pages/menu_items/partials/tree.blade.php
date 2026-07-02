@@ -22,7 +22,7 @@
                     @endif
                 </div>
 
-                <div class="btn-group btn-group-sm" role="group">
+                <fieldset class="btn-group btn-group-sm">
                     {{-- Add child --}}
                     <a href="{{ route('gingerminds-cms.menu_items.create', ['menu' => $menu->id, 'parent_id' => $item->id]) }}"
                        class="btn btn-outline-success"
@@ -49,7 +49,7 @@
                             title="@lang('gingerminds-core::translation.action.remove')">
                         <i class="bi bi-trash"></i>
                     </button>
-                </div>
+                </fieldset>
             </div>
 
             @if($item->adminChildren->isNotEmpty())
