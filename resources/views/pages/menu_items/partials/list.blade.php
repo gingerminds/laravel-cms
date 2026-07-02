@@ -3,7 +3,7 @@
         <td>{{ $menuItem->id }}</td>
         <td>{{ $menuItem->currentTranslation?->name }}</td>
         <td class="text-end">
-            <div class="btn-group" role="group">
+            <fieldset class="btn-group">
                 <a class="btn btn-sm btn-outline-primary" href="{{ route('gingerminds-cms.menu_items.edit', [
     'menu' => $menuItem->menu_id, 'menuItem' => $menuItem->id
 ]) }}">
@@ -21,7 +21,7 @@
                 >
                     <i class="bi-i bi-trash"></i>
                 </button>
-            </div>
+            </fieldset>
         </td>
     </tr>
 @endforeach
