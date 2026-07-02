@@ -6,7 +6,7 @@ use Gingerminds\LaravelCms\Http\Controllers\Menu\MenuController;
 use Gingerminds\LaravelCms\Http\Controllers\Menu\MenuItemController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('web')
+Route::middleware(['web', 'gingerminds-core.auth'])
     ->prefix(config('gingerminds-core.admin_prefix'))
     ->name('gingerminds-cms.')
     ->group(function () {
