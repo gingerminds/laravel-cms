@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Gingerminds\LaravelCms\Http\Controllers\Menu\MenuController;
 use Gingerminds\LaravelCms\Http\Controllers\Menu\MenuItemController;
+use Gingerminds\LaravelCms\Http\Controllers\Page\PageController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['web', 'gingerminds-core.auth'])
@@ -59,4 +60,6 @@ Route::middleware(['web', 'gingerminds-core.auth'])
                 MenuItemController::class, 'reorder',
             ]
         )->name('menu_items.reorder');
+
+        Route::resource('pages', PageController::class);
     });

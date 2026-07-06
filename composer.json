@@ -16,7 +16,9 @@
     "require": {
         "php": "^8.4",
         "gingerminds/laravel-core": "^2.8",
-        "gingerminds/laravel-multisite": "^2.2"
+        "gingerminds/laravel-media-manager": "^6.0",
+        "gingerminds/laravel-multisite": "^2.2",
+        "spatie/laravel-model-states": "^2.14"
     },
     "require-dev": {
         "larastan/larastan": "^3.8",

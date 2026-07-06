@@ -28,5 +28,11 @@ return [
         'message' => [
             'no_result' => 'Aucun élément dans ce menu',
         ],
-    ]
+    ],
+
+    'pages' => [
+        'name_s' => 'Page',
+        'name_p' => 'Pages',
+        'manage' => 'Gestion des pages',
+    ],
 ];

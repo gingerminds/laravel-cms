@@ -26,44 +26,6 @@ class LaravelCmsServiceProvider extends ServiceProvider
     {
         $this->app->register(LaravelCmsAuthServiceProvider::class);
 
-        $this->app->bind(
-            MenuController::class,
-            ResourceResolver::controller('menu')
-        );
-        $this->app->bind(
-            MenuRepository::class,
-            ResourceResolver::repository('menu')
-        );
-        $this->app->bind(
-            Menu::class,
-            ResourceResolver::model('menu')
-        );
-        $this->app->bind(
-            MenuProvider::class,
-            ResourceResolver::provider('menu')
-        );
-        $this->app->bind(
-            MenuRequest::class,
-            ResourceResolver::request('menu')
-        );
-
-        $this->app->bind(
-            MenuItemController::class,
-            ResourceResolver::controller('menu_item')
-        );
-        $this->app->bind(
-            MenuItemRepository::class,
-            ResourceResolver::repository('menu_item')
-        );
-        $this->app->bind(
-            MenuItem::class,
-            ResourceResolver::model('menu_item')
-        );
-        $this->app->bind(
-            MenuItemRequest::class,
-            ResourceResolver::request('menu_item')
-        );
-
         $this->mergeConfigFrom(
             __DIR__ . '/../../config/gingerminds-cms.php',
             'gingerminds-cms'
@@ -81,6 +43,8 @@ class LaravelCmsServiceProvider extends ServiceProvider
         Route::model('menu', ResourceResolver::model('menu'));
 
         Route::model('menu_item', ResourceResolver::model('menu_item'));
+
+        Route::model('page', ResourceResolver::model('page'));
 
         // Chargement des routes du package
         if (! $this->app->routesAreCached()) {
@@ -135,5 +99,72 @@ class LaravelCmsServiceProvider extends ServiceProvider
         if ($toTag !== []) {
             $this->app->tag($toTag, $interface);
         }
+    }
+
+    private function bindResources(): void
+    {
+        $this->app->bind(
+            MenuController::class,
+            ResourceResolver::controller('menu')
+        );
+        $this->app->bind(
+            MenuRepository::class,
+            ResourceResolver::repository('menu')
+        );
+        $this->app->bind(
+            Menu::class,
+            ResourceResolver::model('menu')
+        );
+        $this->app->bind(
+            MenuProvider::class,
+            ResourceResolver::provider('menu')
+        );
+        $this->app->bind(
+            MenuRequest::class,
+            ResourceResolver::request('menu')
+        );
+
+        $this->app->bind(
+            MenuItemController::class,
+            ResourceResolver::controller('menu_item')
+        );
+        $this->app->bind(
+            MenuItemRepository::class,
+            ResourceResolver::repository('menu_item')
+        );
+        $this->app->bind(
+            MenuItem::class,
+            ResourceResolver::model('menu_item')
+        );
+        $this->app->bind(
+            MenuItemRequest::class,
+            ResourceResolver::request('menu_item')
+        );
+
+        $this->app->bind(
+            MenuController::class,
+            ResourceResolver::controller('page')
+        );
+        $this->app->bind(
+            MenuRepository::class,
+            ResourceResolver::repository('page')
+        );
+        $this->app->bind(
+            Menu::class,
+            ResourceResolver::model('page')
+        );
+        $this->app->bind(
+            MenuProvider::class,
+            ResourceResolver::provider('page')
+        );
+        $this->app->bind(
+            MenuRequest::class,
+            ResourceResolver::request('page')
+        );
+
+        $this->app->bind(
+            MenuRequest::class,
+            ResourceResolver::request('page_translation')
+        );
     }
 }

@@ -28,5 +28,11 @@ return [
         'message' => [
             'no_result' => 'No items in this menu',
         ],
-    ]
+    ],
+
+    'pages' => [
+        'name_s' => 'Page',
+        'name_p' => 'Pages',
+        'manage' => 'Manage Pages',
+    ],
 ];
