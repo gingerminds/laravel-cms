@@ -3,10 +3,24 @@
 namespace Gingerminds\LaravelCms\Models\Page;
 
 use Gingerminds\LaravelMediaManager\Models\File\File;
+use Gingerminds\LaravelMultisite\Models\Language\Language;
 use Gingerminds\LaravelMultisite\Models\Trait\TranslationModelTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $language_id
+ * @property string|null $title
+ * @property string|null $slug
+ * @property string|null $hook
+ * @property string|null $content
+ * @property int|null $main_visual_id
+ * @property int|null $thumbnail_id
+ * @property-read Language $language
+ * @property-read File|null $mainVisual
+ * @property-read File|null $thumbnail
+ */
 class PageTranslation extends Model
 {
     use TranslationModelTrait;

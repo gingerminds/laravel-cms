@@ -6,14 +6,21 @@ namespace Gingerminds\LaravelCms\Providers;
 
 use ApiPlatform\State\ProviderInterface;
 use Gingerminds\LaravelCms\ApiProvider\Menu\MenuProvider;
+use Gingerminds\LaravelCms\ApiProvider\Page\PageProvider;
 use Gingerminds\LaravelCms\Http\Controllers\Menu\MenuController;
 use Gingerminds\LaravelCms\Http\Controllers\Menu\MenuItemController;
+use Gingerminds\LaravelCms\Http\Controllers\Page\PageController;
+use Gingerminds\LaravelCms\Http\Middleware\Api\InjectPageFiltersMiddleware;
 use Gingerminds\LaravelCms\Http\Request\Menu\MenuItemRequest;
 use Gingerminds\LaravelCms\Http\Request\Menu\MenuRequest;
+use Gingerminds\LaravelCms\Http\Request\Page\PageRequest;
 use Gingerminds\LaravelCms\Models\Menu\Menu;
 use Gingerminds\LaravelCms\Models\Menu\MenuItem\MenuItem;
+use Gingerminds\LaravelCms\Models\Page\Page;
+use Gingerminds\LaravelCms\Models\Page\PageTranslation;
 use Gingerminds\LaravelCms\Repositories\Menu\MenuItemRepository;
 use Gingerminds\LaravelCms\Repositories\Menu\MenuRepository;
+use Gingerminds\LaravelCms\Repositories\Page\PageRepository;
 use Gingerminds\LaravelCms\Resolver\ResourceResolver;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -26,6 +33,8 @@ class LaravelCmsServiceProvider extends ServiceProvider
     {
         $this->app->register(LaravelCmsAuthServiceProvider::class);
 
+        $this->bindResources();
+
         $this->mergeConfigFrom(
             __DIR__ . '/../../config/gingerminds-cms.php',
             'gingerminds-cms'
@@ -36,6 +45,19 @@ class LaravelCmsServiceProvider extends ServiceProvider
             'Gingerminds\\LaravelCms\\ApiProvider\\',
             ProviderInterface::class
         );
+
+        // Le package s'enregistre lui-même auprès d'api-platform : le projet
+        // consommateur n'a rien à ajouter dans son config/api-platform.php.
+        // Fait dans register() (et non boot()) : tous les register() tournent
+        // avant tous les boot(), donc cette valeur est garantie disponible
+        // avant que le provider api-platform ne construise ses routes dans
+        // son propre boot(), quel que soit l'ordre de boot entre packages.
+        config([
+            'api-platform.routes.middleware' => array_values(array_unique(array_merge(
+                config('api-platform.routes.middleware', []),
+                [InjectPageFiltersMiddleware::class]
+            ))),
+        ]);
     }
 
     public function boot(): void
@@ -142,29 +164,29 @@ class LaravelCmsServiceProvider extends ServiceProvider
         );
 
         $this->app->bind(
-            MenuController::class,
+            PageController::class,
             ResourceResolver::controller('page')
         );
         $this->app->bind(
-            MenuRepository::class,
+            PageRepository::class,
             ResourceResolver::repository('page')
         );
         $this->app->bind(
-            Menu::class,
+            Page::class,
             ResourceResolver::model('page')
         );
         $this->app->bind(
-            MenuProvider::class,
+            PageProvider::class,
             ResourceResolver::provider('page')
         );
         $this->app->bind(
-            MenuRequest::class,
+            PageRequest::class,
             ResourceResolver::request('page')
         );
 
         $this->app->bind(
-            MenuRequest::class,
-            ResourceResolver::request('page_translation')
+            PageTranslation::class,
+            ResourceResolver::model('page_translation')
         );
     }
 }

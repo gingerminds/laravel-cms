@@ -3,12 +3,12 @@
 namespace Gingerminds\LaravelCms\Http\Controllers\Page;
 
 use Gingerminds\LaravelCms\Http\Request\Page\PageRequest;
-use Gingerminds\LaravelCms\Models\Menu\Menu;
 use Gingerminds\LaravelCms\Models\Page\Page;
 use Gingerminds\LaravelCms\Models\Page\PageTranslation;
 use Gingerminds\LaravelCms\Repositories\Page\PageRepository;
 use Gingerminds\LaravelCms\Resolver\ResourceResolver;
 use Gingerminds\LaravelCore\Http\Controllers\AbstractController;
+use Gingerminds\LaravelMultisite\Services\Context\SiteContext;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -40,19 +40,32 @@ class PageController extends AbstractController
 
     public function create(): View
     {
+        $page     = new Page();
+        $statuses = $page->status->transitionableStates();
+        $site     = app(SiteContext::class)->site();
+
         /** @var view-string $view */
         $view = 'gingerminds-cms::pages.pages.create';
 
-        return view($view);
+        return view($view, [
+            'statuses'        => $statuses,
+            'defaultLanguage' => $site?->defaultLanguage()->first(),
+            'languages'       => $site?->languages,
+        ]);
     }
 
     public function edit(Page $page): View
     {
+        $site = app(SiteContext::class)->site();
+
         /** @var view-string $view */
         $view = 'gingerminds-cms::pages.pages.edit';
 
         return view($view, [
-            'page' => $page,
+            'page'            => $page,
+            'statuses'        => $page->status->transitionableStates(),
+            'defaultLanguage' => $site?->defaultLanguage()->first(),
+            'languages'       => $site?->languages,
         ]);
     }
 

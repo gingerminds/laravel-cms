@@ -8,7 +8,7 @@ use Gingerminds\LaravelCms\State\Page\StatusState;
 
 class Published extends StatusState
 {
-    public static function label(): string
+    public static function code(): string
     {
         return 'published';
     }

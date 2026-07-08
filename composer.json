@@ -15,11 +15,11 @@
     ],
     "require": {
         "php": "^8.4",
-        "gingerminds/laravel-core": "^2.8",
+        "gingerminds/laravel-core": "^3.0",
         "gingerminds/laravel-media-manager": "^6.0",
-        "gingerminds/laravel-multisite": "^2.2",
-        "spatie/laravel-model-states": "^2.14"
+        "gingerminds/laravel-multisite": "^2.2"
     },
+    "repositories": [],
     "require-dev": {
         "larastan/larastan": "^3.8",
         "orchestra/testbench": "^10.0",

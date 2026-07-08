@@ -2,6 +2,7 @@
     <tr>
         <td>{{ $page->id }}</td>
         <td>{{ $page->code }}</td>
+        <td>@include('gingerminds-cms::components.field.display.pages.status', ['code' => $page->status::code()])</td>
         <td class="text-end">
             <fieldset class="btn-group">
                 <a class="btn btn-sm btn-outline-primary" href="{{ route('gingerminds-cms.pages.edit', $page) }}">

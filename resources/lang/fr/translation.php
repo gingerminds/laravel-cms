@@ -7,6 +7,13 @@ return [
         'is_no_referrer' => 'No referrer',
         'is_no_opener' => 'No opener',
         'is_no_follow' => 'No follow',
+        'main_visual' => 'Visuel principal',
+        'title' => 'Titre',
+        'slug' => 'Slug',
+        'hook' => 'Accroche',
+        'published_at' => 'Publié le',
+        'archived_at' => 'Archivé le',
+        'status' => 'Statut'
     ],
 
     'menus' => [
@@ -34,5 +41,13 @@ return [
         'name_s' => 'Page',
         'name_p' => 'Pages',
         'manage' => 'Gestion des pages',
+        'form' => [
+            'status' => 'Statut',
+        ],
+        'statuses' => [
+            'draft' => 'Brouillon',
+            'published' => 'Publié',
+            'archived' => 'Archivé',
+        ]
     ],
 ];

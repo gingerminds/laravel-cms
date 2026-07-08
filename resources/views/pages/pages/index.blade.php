@@ -29,6 +29,7 @@
     $columns = [
         ['name' => '#', 'sortable' => false],
         ['name' => __('gingerminds-core::translation.form.code'), 'sortable' => true, 'property' => 'code'],
+        ['name' => __('gingerminds-cms::translation.form.status'), 'sortable' => true, 'property' => 'status'],
         ['name' => __('gingerminds-core::translation.actions'), 'sortable' => false],
     ];
     $sortBy = request()->query('sortBy');

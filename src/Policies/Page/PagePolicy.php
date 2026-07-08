@@ -9,7 +9,7 @@ class PagePolicy
     /**
      * Determine whether the user can view any models.
      */
-    public function viewAny(): bool
+    public function viewAny(?User $user): bool
     {
         return true;
     }
@@ -17,7 +17,7 @@ class PagePolicy
     /**
      * Determine whether the user can view the model.
      */
-    public function view(): bool
+    public function view(?User $user): bool
     {
         return true;
     }

@@ -19,6 +19,7 @@ return new class () extends Migration {
             $table->foreignUuid('main_visual_id')->nullable()->constrained('files')->nullOnDelete();
             $table->foreignUuid('thumbnail_id')->nullable()->constrained('files')->nullOnDelete();
             $table->dateTime('published_at')->nullable();
+            $table->dateTime('archived_at')->nullable();
             $table->timestamps();
 
             $table->unique(['code', 'site_id']);
