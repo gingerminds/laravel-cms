@@ -10,6 +10,7 @@ use Gingerminds\LaravelCms\Models\Page\PageTranslation;
 use Gingerminds\LaravelCms\Models\Page\PageUrl;
 use Gingerminds\LaravelCms\Models\PageCategory\PageCategory;
 use Gingerminds\LaravelCore\Http\Requests\FormRequestInterface;
+use Gingerminds\LaravelMultisite\Http\Requests\Concerns\BuildsTranslationAttributesTrait;
 use Gingerminds\LaravelMultisite\Services\Context\SiteContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -17,6 +18,8 @@ use Illuminate\Validation\Validator;
 
 class PageRequest extends FormRequest implements FormRequestInterface
 {
+    use BuildsTranslationAttributesTrait;
+
     private const array FILE_FIELDS = ['main_visual', 'thumbnail'];
 
     private const array OPTIONAL_TEXT_FIELDS = ['hook', 'content', 'slug'];
@@ -188,30 +191,16 @@ class PageRequest extends FormRequest implements FormRequestInterface
 
     public function attributes(): array
     {
-        $attributes = [];
+        $attributes = [
+            'category_id' => __('gingerminds-cms::translation.pages.form.category'),
+        ];
 
-        $labels = [
+        return $attributes + $this->translationAttributes([
             'title'       => __('gingerminds-cms::translation.form.title'),
             'slug'        => __('gingerminds-cms::translation.form.slug'),
             'hook'        => __('gingerminds-cms::translation.form.hook'),
             'main_visual' => __('gingerminds-cms::translation.form.main_visual'),
             'thumbnail'   => __('gingerminds-media-manager::translation.form.thumbnail'),
-        ];
-
-        $attributes['category_id'] = __('gingerminds-cms::translation.pages.form.category');
-
-        $languages = app(SiteContext::class)->site()->languages ?? collect();
-
-        foreach ($this->input('translations', []) as $langId => $fields) {
-            $language      = $languages->firstWhere('id', $langId);
-            $languageLabel = $language->iso ?? $langId;
-
-            foreach ($fields as $field => $value) {
-                $fieldLabel                                = $labels[$field] ?? $field;
-                $attributes["translations.$langId.$field"] = "$fieldLabel ($languageLabel)";
-            }
-        }
-
-        return $attributes;
+        ]);
     }
 }

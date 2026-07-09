@@ -7,12 +7,15 @@ namespace Gingerminds\LaravelCms\Http\Request\PageCategory;
 use Gingerminds\LaravelCms\Models\PageCategory\PageCategory;
 use Gingerminds\LaravelCms\Models\PageCategory\PageCategoryTranslation;
 use Gingerminds\LaravelCore\Http\Requests\FormRequestInterface;
+use Gingerminds\LaravelMultisite\Http\Requests\Concerns\BuildsTranslationAttributesTrait;
 use Gingerminds\LaravelMultisite\Services\Context\SiteContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class PageCategoryRequest extends FormRequest implements FormRequestInterface
 {
+    use BuildsTranslationAttributesTrait;
+
     private const array OPTIONAL_TEXT_FIELDS = ['prefix'];
 
     /** @return array<string, mixed> */
@@ -108,27 +111,13 @@ class PageCategoryRequest extends FormRequest implements FormRequestInterface
 
     public function attributes(): array
     {
-        $attributes = [];
-
-        $labels = [
-            'name'   => __('gingerminds-cms::translation.page_categories.form.name'),
-            'prefix' => __('gingerminds-cms::translation.page_categories.form.prefix'),
+        $attributes = [
+            'is_unique' => __('gingerminds-cms::translation.page_categories.form.is_unique'),
         ];
 
-        $attributes['is_unique'] = __('gingerminds-cms::translation.page_categories.form.is_unique');
-
-        $languages = app(SiteContext::class)->site()->languages ?? collect();
-
-        foreach ($this->input('translations', []) as $langId => $fields) {
-            $language      = $languages->firstWhere('id', $langId);
-            $languageLabel = $language->iso ?? $langId;
-
-            foreach ($fields as $field => $value) {
-                $fieldLabel                                = $labels[$field] ?? $field;
-                $attributes["translations.$langId.$field"] = "$fieldLabel ($languageLabel)";
-            }
-        }
-
-        return $attributes;
+        return $attributes + $this->translationAttributes([
+            'name'   => __('gingerminds-cms::translation.page_categories.form.name'),
+            'prefix' => __('gingerminds-cms::translation.page_categories.form.prefix'),
+        ]);
     }
 }

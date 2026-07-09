@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace Gingerminds\LaravelCms\Http\Request\Menu;
 
 use Gingerminds\LaravelCore\Http\Requests\FormRequestInterface;
+use Gingerminds\LaravelMultisite\Http\Requests\Concerns\BuildsTranslationAttributesTrait;
 use Gingerminds\LaravelMultisite\Services\Context\SiteContext;
 use Illuminate\Foundation\Http\FormRequest;
 
 class MenuItemRequest extends FormRequest implements FormRequestInterface
 {
+    use BuildsTranslationAttributesTrait;
+
     /** @return array<string, list<string>|string> */
     public function rules(): array
     {
@@ -41,26 +44,10 @@ class MenuItemRequest extends FormRequest implements FormRequestInterface
 
     public function attributes(): array
     {
-        $attributes = [];
-
-        $labels = [
+        return $this->translationAttributes([
             'name'        => __('gingerminds-core::translation.form.name'),
             'url'         => __('gingerminds-cms::translation.form.url'),
             'description' => __('gingerminds-core::translation.form.description'),
-        ];
-
-        $languages = app(SiteContext::class)->site()->languages ?? collect();
-
-        foreach ($this->input('translations', []) as $langId => $fields) {
-            $language      = $languages->firstWhere('id', $langId);
-            $languageLabel = $language->iso ?? $langId;
-
-            foreach ($fields as $field => $value) {
-                $fieldLabel                                = $labels[$field] ?? $field;
-                $attributes["translations.$langId.$field"] = "$fieldLabel ($languageLabel)";
-            }
-        }
-
-        return $attributes;
+        ]);
     }
 }
