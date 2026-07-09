@@ -38,12 +38,12 @@ class LaravelCmsServiceProvider extends ServiceProvider
     {
         $this->app->register(LaravelCmsAuthServiceProvider::class);
 
-        $this->bindResources();
-
         $this->mergeConfigFrom(
             __DIR__ . '/../../config/gingerminds-cms.php',
             'gingerminds-cms'
         );
+
+        $this->bindResources();
 
         $this->tagClassesFromPath(
             __DIR__ . '/../ApiProvider',
