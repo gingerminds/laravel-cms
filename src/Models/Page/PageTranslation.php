@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * @property int $id
+ * @property int|null $site_id
  * @property int $language_id
  * @property string|null $title
  * @property string|null $slug
@@ -38,6 +39,7 @@ class PageTranslation extends Model
             'main_visual_id',
             'thumbnail_id',
             'language_id',
+            'site_id',
         ];
     }
 
