@@ -20,15 +20,16 @@
 @endsection
 
 @section('actions')
-    <a href="{{ route('gingerminds-cms.pages.create') }}" class="btn btn-sm btn-success">
+    <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#modalChoosePageCategory">
         <i class="bi bi-plus-lg me-1"></i> @lang('gingerminds-core::translation.title_m_create', ['model' => __('gingerminds-cms::translation.pages.name_s')])
-    </a>
+    </button>
 @endsection
 
 @php
     $columns = [
         ['name' => '#', 'sortable' => false],
         ['name' => __('gingerminds-core::translation.form.code'), 'sortable' => true, 'property' => 'code'],
+        ['name' => __('gingerminds-cms::translation.page_categories.name_s'), 'sortable' => false],
         ['name' => __('gingerminds-cms::translation.form.status'), 'sortable' => true, 'property' => 'status'],
         ['name' => __('gingerminds-core::translation.actions'), 'sortable' => false],
     ];
@@ -42,4 +43,9 @@
 
 @push('modals')
     <x-gingerminds-core::modal.modal-delete :model="__('translation.pages.name_s')" routing="gingerminds-cms.pages"/>
+
+    @include('gingerminds-cms::pages.pages.partials.modal-choose-category', [
+        'categoryTree' => $categoryTree,
+        'createRoute'  => route('gingerminds-cms.pages.create'),
+    ])
 @endpush
