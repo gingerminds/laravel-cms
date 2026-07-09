@@ -48,6 +48,26 @@ return [
             'draft' => 'Brouillon',
             'published' => 'Publié',
             'archived' => 'Archivé',
-        ]
+        ],
+    ],
+
+    'page_categories' => [
+        'name_s' => 'Catégorie',
+        'name_p' => 'Catégories',
+        'manage' => 'Gestion des catégories de pages',
+        'form' => [
+            'parent_id' => 'Parent',
+            'name' => 'Nom',
+            'prefix' => 'Préfixe d\'URL',
+            'prefix_hint' => 'Laisser vide pour ne pas ajouter de segment à l\'URL des pages de cette catégorie.',
+            'is_unique' => 'Catégorie unique (une seule page autorisée)',
+        ],
+        'action' => [
+            'add_child' => 'Ajouter un enfant',
+            'choose' => 'Choisir une catégorie',
+        ],
+        'message' => [
+            'no_result' => 'Aucune catégorie pour le moment',
+        ],
     ],
 ];

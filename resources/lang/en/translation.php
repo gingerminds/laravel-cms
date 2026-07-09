@@ -48,6 +48,26 @@ return [
             'draft' => 'Draft',
             'published' => 'Published',
             'archived' => 'Archived',
-        ]
+        ],
+    ],
+
+    'page_categories' => [
+        'name_s' => 'Page category',
+        'name_p' => 'Page categories',
+        'manage' => 'Manage Page Categories',
+        'form' => [
+            'parent_id' => 'Parent',
+            'name' => 'Name',
+            'prefix' => 'URL prefix',
+            'prefix_hint' => 'Leave blank to not add a URL segment for pages in this category.',
+            'is_unique' => 'Unique category (only one page allowed)',
+        ],
+        'action' => [
+            'add_child' => 'Add a child',
+            'choose' => 'Choose a category',
+        ],
+        'message' => [
+            'no_result' => 'No categories yet',
+        ],
     ],
 ];

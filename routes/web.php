@@ -60,4 +60,11 @@ Route::middleware(['web', 'gingerminds-core.auth'])
         )->name('menu_items.reorder');
 
         Route::resource('pages', ResourceResolver::controller('page'));
+        // Hyphenated, matching MediaCategory's "media-categories" URI
+        // convention. Route::resource() derives route *names* from the
+        // resource name as-is (no automatic underscore<->hyphen
+        // conversion), so every route() reference to this resource
+        // throughout PageCategoryController/the page_categories views uses
+        // "gingerminds-cms.page-categories.*", not "page_categories".
+        Route::resource('page-categories', ResourceResolver::controller('page_category'));
     });

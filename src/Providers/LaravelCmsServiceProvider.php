@@ -10,17 +10,22 @@ use Gingerminds\LaravelCms\ApiProvider\Page\PageProvider;
 use Gingerminds\LaravelCms\Http\Controllers\Menu\MenuController;
 use Gingerminds\LaravelCms\Http\Controllers\Menu\MenuItemController;
 use Gingerminds\LaravelCms\Http\Controllers\Page\PageController;
+use Gingerminds\LaravelCms\Http\Controllers\PageCategory\PageCategoryController;
 use Gingerminds\LaravelCms\Http\Middleware\Api\InjectPageFiltersMiddleware;
 use Gingerminds\LaravelCms\Http\Request\Menu\MenuItemRequest;
 use Gingerminds\LaravelCms\Http\Request\Menu\MenuRequest;
 use Gingerminds\LaravelCms\Http\Request\Page\PageRequest;
+use Gingerminds\LaravelCms\Http\Request\PageCategory\PageCategoryRequest;
 use Gingerminds\LaravelCms\Models\Menu\Menu;
 use Gingerminds\LaravelCms\Models\Menu\MenuItem\MenuItem;
 use Gingerminds\LaravelCms\Models\Page\Page;
 use Gingerminds\LaravelCms\Models\Page\PageTranslation;
+use Gingerminds\LaravelCms\Models\PageCategory\PageCategory;
+use Gingerminds\LaravelCms\Models\PageCategory\PageCategoryTranslation;
 use Gingerminds\LaravelCms\Repositories\Menu\MenuItemRepository;
 use Gingerminds\LaravelCms\Repositories\Menu\MenuRepository;
 use Gingerminds\LaravelCms\Repositories\Page\PageRepository;
+use Gingerminds\LaravelCms\Repositories\PageCategory\PageCategoryRepository;
 use Gingerminds\LaravelCms\Resolver\ResourceResolver;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -67,6 +72,8 @@ class LaravelCmsServiceProvider extends ServiceProvider
         Route::model('menu_item', ResourceResolver::model('menu_item'));
 
         Route::model('page', ResourceResolver::model('page'));
+
+        Route::model('page_category', ResourceResolver::model('page_category'));
 
         // Chargement des routes du package
         if (! $this->app->routesAreCached()) {
@@ -187,6 +194,28 @@ class LaravelCmsServiceProvider extends ServiceProvider
         $this->app->bind(
             PageTranslation::class,
             ResourceResolver::model('page_translation')
+        );
+
+        $this->app->bind(
+            PageCategoryController::class,
+            ResourceResolver::controller('page_category')
+        );
+        $this->app->bind(
+            PageCategoryRepository::class,
+            ResourceResolver::repository('page_category')
+        );
+        $this->app->bind(
+            PageCategory::class,
+            ResourceResolver::model('page_category')
+        );
+        $this->app->bind(
+            PageCategoryRequest::class,
+            ResourceResolver::request('page_category')
+        );
+
+        $this->app->bind(
+            PageCategoryTranslation::class,
+            ResourceResolver::model('page_category_translation')
         );
     }
 }
