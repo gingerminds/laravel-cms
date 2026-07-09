@@ -5,7 +5,9 @@ namespace Gingerminds\LaravelCms\Http\Controllers\Page;
 use Gingerminds\LaravelCms\Http\Request\Page\PageRequest;
 use Gingerminds\LaravelCms\Models\Page\Page;
 use Gingerminds\LaravelCms\Models\Page\PageTranslation;
+use Gingerminds\LaravelCms\Models\PageCategory\PageCategory;
 use Gingerminds\LaravelCms\Repositories\Page\PageRepository;
+use Gingerminds\LaravelCms\Repositories\PageCategory\PageCategoryRepository;
 use Gingerminds\LaravelCms\Resolver\ResourceResolver;
 use Gingerminds\LaravelCore\Http\Controllers\AbstractController;
 use Gingerminds\LaravelMultisite\Services\Context\SiteContext;
@@ -19,7 +21,8 @@ class PageController extends AbstractController
     public const string LABEL_S = 'gingerminds-cms::translation.pages.name_s';
 
     public function __construct(
-        protected readonly PageRepository $repository
+        protected readonly PageRepository $repository,
+        protected readonly PageCategoryRepository $categoryRepository,
     ) {
     }
 
@@ -33,13 +36,22 @@ class PageController extends AbstractController
         $view = 'gingerminds-cms::pages.pages.index';
 
         return view($view, [
-            'resource' => ResourceResolver::model('page'),
-            'items'    => $items,
+            'resource'     => ResourceResolver::model('page'),
+            'items'        => $items,
+            'categoryTree' => $this->categoryRepository->getRootItems(),
         ]);
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
+        $categoryId = $request->query('category_id');
+        $categories = $this->categoryRepository->getAllForSelect();
+
+        /** @var PageCategory|null $category */
+        $category = $categoryId
+            ? collect($categories)->firstWhere('category.id', (int) $categoryId)['category'] ?? null
+            : null;
+
         $page     = new Page();
         $statuses = $page->status->transitionableStates();
         $site     = app(SiteContext::class)->site();
@@ -49,6 +61,8 @@ class PageController extends AbstractController
 
         return view($view, [
             'statuses'        => $statuses,
+            'category'        => $category,
+            'categories'      => $categories,
             'defaultLanguage' => $site?->defaultLanguage()->first(),
             'languages'       => $site?->languages,
         ]);
@@ -63,6 +77,8 @@ class PageController extends AbstractController
 
         return view($view, [
             'page'            => $page,
+            'category'        => $page->category,
+            'categories'      => $this->categoryRepository->getAllForSelect(),
             'statuses'        => $page->status->transitionableStates(),
             'defaultLanguage' => $site?->defaultLanguage()->first(),
             'languages'       => $site?->languages,

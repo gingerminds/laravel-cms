@@ -13,6 +13,7 @@ use Gingerminds\LaravelCms\Services\Page\PageFilterComputeService;
 use Gingerminds\LaravelCms\Services\Page\PageFilterStore;
 use Gingerminds\LaravelCore\ApiProvider\AbstractApiProvider;
 use Gingerminds\LaravelCore\ApiProvider\ApiProviderInterface;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * @implements ProviderInterface<Page>
@@ -34,6 +35,14 @@ class PageProvider extends AbstractApiProvider implements ProviderInterface, Api
      */
     public function provide(Operation $operation, array $uriVariables = [], array $context = []): object|array|null
     {
+        if (isset($uriVariables['slug'])) {
+            return $this->provideByPath((string) $uriVariables['slug']);
+        }
+
+        if (isset($uriVariables['code'])) {
+            return $this->provideByCode((string) $uriVariables['code']);
+        }
+
         $result = parent::provide($operation, $uriVariables, $context);
 
         if ($operation instanceof CollectionOperationInterface) {
@@ -41,5 +50,31 @@ class PageProvider extends AbstractApiProvider implements ProviderInterface, Api
         }
 
         return $result;
+    }
+
+    private function provideByPath(string $path): Page
+    {
+        /** @var PageRepository $repository */
+        $repository = $this->repository;
+        $page       = $repository->findPublishedByPath($path);
+
+        if (!$page instanceof Page) {
+            throw new NotFoundHttpException();
+        }
+
+        return $page;
+    }
+
+    private function provideByCode(string $code): Page
+    {
+        /** @var PageRepository $repository */
+        $repository = $this->repository;
+        $page       = $repository->findPublishedByCode($code);
+
+        if (!$page instanceof Page) {
+            throw new NotFoundHttpException();
+        }
+
+        return $page;
     }
 }

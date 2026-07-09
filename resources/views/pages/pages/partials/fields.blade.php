@@ -37,6 +37,27 @@
 <div class="col-lg-4">
     <div class="card">
         <div class="card-body">
+            @php
+                $selectedCategoryId = old('category_id', isset($page) ? $page->category_id : $category?->id);
+            @endphp
+            <x-gingerminds-core::form.inputs.select
+                    id="category_id"
+                    :label="__('gingerminds-cms::translation.pages.form.category')"
+                    :required="false"
+                    size="xl"
+            >
+                <option value="" {{ !$selectedCategoryId ? 'selected' : '' }}>— @lang('gingerminds-core::translation.none') —</option>
+                @foreach($categories as $option)
+                    <option
+                            value="{{ $option['category']->id }}"
+                            {{ (int) $selectedCategoryId === (int) $option['category']->id ? 'selected' : '' }}
+                    >{{ str_repeat('— ', $option['depth']) }}{{ $option['category']->name }}</option>
+                @endforeach
+            </x-gingerminds-core::form.inputs.select>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
             <div class="row">
                 @php
                     $selectedStatus = old('status', isset($page)

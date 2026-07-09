@@ -43,11 +43,17 @@ return [
         'manage' => 'Gestion des pages',
         'form' => [
             'status' => 'Statut',
+            'category' => 'Catégorie',
         ],
         'statuses' => [
             'draft' => 'Brouillon',
             'published' => 'Publié',
             'archived' => 'Archivé',
+        ],
+        'message' => [
+            'category_required' => 'Choisissez une catégorie avant de créer une page.',
+            'is_unique_taken' => 'Cette catégorie n\'accepte qu\'une seule page, et elle est déjà utilisée par une autre page.',
+            'url_taken' => 'Une autre page correspond déjà exactement à cette URL pour cette langue.',
         ],
     ],
 

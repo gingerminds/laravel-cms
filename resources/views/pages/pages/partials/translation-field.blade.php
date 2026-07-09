@@ -14,13 +14,16 @@
             />
         </div>
         <div class="row mb-3">
+            @php
+                $categoryPath = $categoryPaths[$language->id] ?? '';
+            @endphp
             <x-gingerminds-core::form.inputs.basic
-                    type="text"
                     id="translations_{{ $language->id }}_slug"
                     label="{{ __('gingerminds-cms::translation.form.slug') }}"
-                    :required="$required"
+                    :required="false"
                     name="translations[{{ $language->id }}][slug]"
                     value="{{ old('translations.'.$language->id.'.slug', $translation?->slug) }}"
+                    prefix="/{{ $categoryPath }}{{ '' !== $categoryPath ? '/' : '' }}"
                     size="xl"
             />
         </div>

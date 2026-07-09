@@ -6,7 +6,9 @@ use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Link;
 use Gingerminds\LaravelCms\ApiProvider\Page\PageProvider;
+use Gingerminds\LaravelCms\Models\PageCategory\PageCategory;
 use Gingerminds\LaravelCms\State\Page\StatusState;
 use Gingerminds\LaravelCore\Models\FilterableModelInterface;
 use Gingerminds\LaravelCore\Models\ResourceModelInterface;
@@ -20,9 +22,14 @@ use Illuminate\Support\Collection;
 use Spatie\ModelStates\HasStates;
 use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Serializer\Attribute\SerializedName;
+use Symfony\Component\TypeInfo\Type\BuiltinType;
+use Symfony\Component\TypeInfo\Type\CollectionType;
+use Symfony\Component\TypeInfo\Type\GenericType;
+use Symfony\Component\TypeInfo\TypeIdentifier;
 
 /**
  * @property int<0, max>|null $site_id
+ * @property int<0, max>|null $category_id
  * @property StatusState $status
  */
 #[ApiResource(
@@ -32,6 +39,19 @@ use Symfony\Component\Serializer\Attribute\SerializedName;
         ),
         new Get(
             normalizationContext: ['groups' => [Page::GROUP_READ]],
+        ),
+        new Get(
+            uriTemplate: '/pages/by-slug/{slug}',
+            uriVariables: ['slug' => new Link(fromClass: Page::class, identifiers: ['fullPath'])],
+            requirements: ['slug' => '.+'],
+            normalizationContext: ['groups' => [Page::GROUP_READ]],
+            provider: PageProvider::class,
+        ),
+        new Get(
+            uriTemplate: '/pages/by-code/{code}',
+            uriVariables: ['code' => new Link(fromClass: Page::class, identifiers: ['code'])],
+            normalizationContext: ['groups' => [Page::GROUP_READ]],
+            provider: PageProvider::class,
         ),
     ],
     provider: PageProvider::class,
@@ -82,10 +102,21 @@ use Symfony\Component\Serializer\Attribute\SerializedName;
     ]),
     new SerializedName('thumbnail'),
 ])]
-#[ApiProperty(property: 'switch_lang', serialize: new Groups([
-    Page::GROUP_LIST,
-    Page::GROUP_READ,
-]))]
+#[ApiProperty(
+    property: 'switch_lang',
+    serialize: new Groups([
+        Page::GROUP_LIST,
+        Page::GROUP_READ,
+    ]),
+    nativeType: new CollectionType(
+        new GenericType(
+            new BuiltinType(TypeIdentifier::ARRAY),
+            new BuiltinType(TypeIdentifier::STRING),
+            new BuiltinType(TypeIdentifier::STRING),
+        ),
+        false,
+    ),
+)]
 class Page extends Model implements ResourceModelInterface, FilterableModelInterface, SearchableModelInterface
 {
     use HasStates;
@@ -117,7 +148,16 @@ class Page extends Model implements ResourceModelInterface, FilterableModelInter
             'published_at',
             'archived_at',
             'site_id',
+            'category_id',
         ];
+    }
+
+    /**
+     * @return BelongsTo<PageCategory, $this>
+     */
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(PageCategory::class, 'category_id');
     }
 
     public function getStatusLabelAttribute(): string
@@ -125,7 +165,7 @@ class Page extends Model implements ResourceModelInterface, FilterableModelInter
         return $this->status->getMorphClass()::code();
     }
 
-    public function getTitle(): ?string
+    public function getTitleAttribute(): ?string
     {
         /** @var PageTranslation|null $translation */
         $translation = $this->currentTranslation;
@@ -133,12 +173,32 @@ class Page extends Model implements ResourceModelInterface, FilterableModelInter
         return $translation?->title;
     }
 
-    public function getSlug(): ?string
+    public function getSlugAttribute(): ?string
     {
         /** @var PageTranslation|null $translation */
         $translation = $this->currentTranslation;
 
         return $translation?->slug;
+    }
+
+    public function getFullPath(): string
+    {
+        /** @var PageTranslation|null $translation */
+        $translation = $this->currentTranslation;
+
+        $categoryPath = $this->category?->getFullPathForLanguage($translation?->language_id) ?? '';
+        $slug         = $translation?->slug                                                  ?? ''; // @phpstan-ignore nullsafe.neverNull
+
+        return self::composePath($categoryPath, $slug);
+    }
+
+    public static function composePath(string $categoryPath, string $slug): string
+    {
+        return match (true) {
+            '' === $categoryPath => $slug,
+            '' === $slug         => $categoryPath,
+            default              => $categoryPath . '/' . $slug,
+        };
     }
 
     public function getHook(): ?string
@@ -199,20 +259,27 @@ class Page extends Model implements ResourceModelInterface, FilterableModelInter
     }
 
     /**
-     * @return array<string, string|null>
+     * @return array<string, string>
      */
     public function getSwitchLangAttribute(): array
     {
-        $slugs = [];
+        $paths = [];
 
         /** @var Collection<int, PageTranslation> $translations */
         $translations = $this->translations;
 
         foreach ($translations as $translation) {
-            $slugs[$translation->language->iso] = $translation->slug;
+            if (null === $translation->title || '' === $translation->title) {
+                continue;
+            }
+
+            $categoryPath = $this->category?->getFullPathForLanguage($translation->language_id) ?? '';
+            $path         = self::composePath($categoryPath, $translation->slug ?? '');
+
+            $paths[$translation->language->iso] = $path;
         }
 
-        return $slugs;
+        return $paths;
     }
 
     public static function getFilters(): array
@@ -233,6 +300,11 @@ class Page extends Model implements ResourceModelInterface, FilterableModelInter
                 'label'    => 'gingerminds-cms::translation.pages.form.status',
                 'choices'  => $statusChoices,
                 'multiple' => true,
+            ],
+            'category_id' => [
+                'type'  => 'select-model',
+                'label' => 'gingerminds-cms::translation.pages.form.category',
+                'model' => PageCategory::class,
             ],
         ];
     }

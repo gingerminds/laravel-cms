@@ -43,11 +43,17 @@ return [
         'manage' => 'Manage Pages',
         'form' => [
             'status' => 'Status',
+            'category' => 'Category',
         ],
         'statuses' => [
             'draft' => 'Draft',
             'published' => 'Published',
             'archived' => 'Archived',
+        ],
+        'message' => [
+            'category_required' => 'Choose a category before creating a page.',
+            'is_unique_taken' => 'This category only accepts one page, and it is already used by another page.',
+            'url_taken' => 'Another page already resolves to this exact URL for this language.',
         ],
     ],
 

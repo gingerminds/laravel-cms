@@ -6,7 +6,10 @@ namespace Gingerminds\LaravelCms\Repositories\Page;
 
 use Gingerminds\LaravelCms\Models\Page\Page;
 use Gingerminds\LaravelCms\Models\Page\PageTranslation;
+use Gingerminds\LaravelCms\Models\Page\PageUrl;
 use Gingerminds\LaravelCms\Resolver\ResourceResolver;
+use Gingerminds\LaravelCms\Services\Page\PageUrlSyncer;
+use Gingerminds\LaravelCms\State\Page\Status\Published;
 use Gingerminds\LaravelCms\State\Page\StatusState;
 use Gingerminds\LaravelCore\Http\Requests\FormRequestInterface;
 use Gingerminds\LaravelCore\Models\ResourceModelInterface;
@@ -15,6 +18,7 @@ use Gingerminds\LaravelCore\Repositories\Filters\FilterHandlerRegistry;
 use Gingerminds\LaravelCore\Repositories\RepositoryInterface;
 use Gingerminds\LaravelMediaManager\Models\File\File;
 use Gingerminds\LaravelMediaManager\Services\File\FileUploadService;
+use Gingerminds\LaravelMultisite\Services\Context\LanguageContext;
 use Gingerminds\LaravelMultisite\Services\Context\SiteContext;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -32,12 +36,73 @@ class PageRepository extends AbstractRepository implements RepositoryInterface
 
     public function __construct(
         protected readonly FileUploadService $uploadService,
+        protected readonly PageUrlSyncer $urlSyncer,
     ) {
     }
 
     public function getModelClass(): string
     {
         return ResourceResolver::model('page');
+    }
+
+    public function findPublishedByPath(string $path): ?Page
+    {
+        $segments = array_values(array_filter(
+            explode('/', trim($path, '/')),
+            static fn (string $segment): bool => '' !== $segment
+        ));
+
+        $normalizedPath = implode('/', $segments);
+        $siteId         = app(SiteContext::class)->site()?->id;
+        $languageIds    = $this->resolveLanguagePreference();
+
+        foreach ([] !== $languageIds ? $languageIds : [null] as $languageId) {
+            /** @var PageUrl|null $pageUrl */
+            $pageUrl = PageUrl::query()
+                ->where('site_id', $siteId)
+                ->where('path', $normalizedPath)
+                ->when($languageId, fn (Builder $query) => $query->where('language_id', $languageId))
+                ->whereHas('page', fn (Builder $query) => $query->where('status', Published::class))
+                ->with('page')
+                ->first();
+
+            if (null !== $pageUrl) {
+                return $pageUrl->page;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function resolveLanguagePreference(): array
+    {
+        if (!app()->bound(LanguageContext::class)) {
+            return [];
+        }
+
+        $context = app(LanguageContext::class);
+
+        return array_values(array_filter([
+            $context->current()?->id,
+            $context->fallback()?->id,
+        ]));
+    }
+
+    public function findPublishedByCode(string $code): ?Page
+    {
+        /** @var class-string<Page> $modelClass */
+        $modelClass = $this->getModelClass();
+
+        /** @var Page|null $page */
+        $page = $modelClass::query()
+            ->where('code', $code)
+            ->where('status', Published::class)
+            ->first();
+
+        return $page;
     }
 
     public function update(
@@ -54,8 +119,16 @@ class PageRepository extends AbstractRepository implements RepositoryInterface
             return $resourceModel;
         }
 
-        $resourceModel->fill($request->except('status'));
+        $resourceModel->fill($request->except(['status', 'category_id']));
         $resourceModel->site_id = app(SiteContext::class)->site()?->id;
+        // `max(0, ...)`, not a plain `(int)` cast: `Page::$category_id` is
+        // typed `int<0, max>|null` (an unsigned FK column), but a bare
+        // `(int)` cast is a full-range `int` as far as PHPStan is
+        // concerned — `max()` with a literal `0` lower bound is enough for
+        // it to narrow the result back down to a non-negative int.
+        $resourceModel->category_id = $request->filled('category_id')
+            ? max(0, (int) $request->input('category_id'))
+            : null;
 
         foreach (self::FILE_FIELDS as $field) {
             $this->syncPageFile($request, $resourceModel, $field);
@@ -67,15 +140,11 @@ class PageRepository extends AbstractRepository implements RepositoryInterface
             $this->prepareTranslations($request, $resourceModel)
         );
 
+        $this->urlSyncer->syncPage($resourceModel);
+
         return $resourceModel;
     }
 
-    /**
-     * Status changes go through Spatie's transition mechanism (rather than a
-     * plain attribute assignment via fill()) so that allowed-transition
-     * validation runs and the `StateChanged` event fires — that event is what
-     * `SetPublishedAtOnPublish` listens to in order to stamp `published_at`.
-     */
     private function syncStatus(FormRequestInterface $request, Page $page): void
     {
         /** @var class-string<StatusState>|null $requestedStatus */
@@ -147,6 +216,12 @@ class PageRepository extends AbstractRepository implements RepositoryInterface
                 );
             }
 
+            $fields['site_id'] = $page->site_id;
+
+            if (array_key_exists('slug', $fields) && '' === $fields['slug']) {
+                $fields['slug'] = null;
+            }
+
             $translations[$languageId] = $fields;
         }
 
@@ -195,13 +270,6 @@ class PageRepository extends AbstractRepository implements RepositoryInterface
     }
 
     /**
-     * Builds a base Page query with all active request filters applied,
-     * except those in $excludeKeys (faceted/drill-down search).
-     *
-     * Delegates to the same FilterHandlerRegistry as AbstractRepository::applyFilters(),
-     * so the faceted query stays in sync with whatever a normal request does —
-     * including for filter types registered by other packages.
-     *
      * @param  list<string>  $excludeKeys  filter keys to skip (e.g. ['status'])
      * @return Builder<Page>
      */
