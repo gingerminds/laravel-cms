@@ -58,7 +58,7 @@ class PageCategoryRequest extends FormRequest implements FormRequestInterface
         return [
             'nullable',
             Rule::exists('page_categories', 'id')->where(fn ($query) => $query->where('site_id', $siteId)),
-            Rule::notIn($category ? $this->descendantAndSelfIds($category) : []),
+            Rule::notIn($category instanceof PageCategory ? $this->descendantAndSelfIds($category) : []),
         ];
     }
 
