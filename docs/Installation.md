@@ -39,7 +39,7 @@ Creates `config/gingerminds-cms.php` — see [Configuration](./Configuration.md)
 php artisan migrate
 ```
 
-Creates `menus`, `menu_items`, and `menu_item_translations`. Note there is no `menu_translations` table — only `MenuItem` is translatable, `Menu` itself is not.
+Creates `menus`, `menu_items`, `menu_item_translations`, `pages`, `page_translations`, `page_categories`, `page_category_translations`, and `page_urls` (a precomputed per-language URL index kept in sync automatically — see [Pages](./Pages.md#pageurl)). Note there is no `menu_translations` table — only `MenuItem` is translatable, `Menu` itself is not.
 
 ## 5. Publish the JS assets
 
@@ -60,6 +60,8 @@ As with any published assets, this is a plain file copy (not a symlink) — re-r
 
 > Note: `--tag=gingerminds-assets` is shared with `laravel-media-manager` — running it publishes both packages' assets (JS and SCSS) in one go if both are installed.
 
+> **Cross-package styling dependency:** the "choose a category" tree modal (pages *and* page categories) reuses `laravel-media-manager`'s `.category-tree`/`.category-tree-item`/`.toggle-icon` SCSS classes rather than shipping its own — `laravel-media-manager` must be installed and its SCSS imported for that modal to render correctly.
+
 ### Required npm packages
 
 The WYSIWYG editor is built on [TipTap](https://tiptap.dev/). Install its dependencies (and SortableJS, used by the menu item drag-and-drop tree — see [Menus](./Menus.md)):
@@ -74,7 +76,9 @@ npm install @tiptap/core@^2.11.5 @tiptap/starter-kit@^2.11.5 @tiptap/extension-l
 $this->call(\Gingerminds\LaravelCms\Database\Seeders\PermissionSeeder::class);
 ```
 
-Creates six Spatie permissions: `view/edit/delete menus` and `view/edit/delete menu_items` (guard `web`). Not run automatically.
+Creates `view/edit/delete menus`, `view/edit/delete menu_items`, and `view/edit/delete page_categories` (guard `web`). Not run automatically.
+
+> **Known gap:** `PagePolicy` checks `'edit pages'`/`'delete pages'`, but this seeder never actually creates a `pages` permission set — grant those manually (or extend the seeder) until it's added.
 
 ## What you get out of the box
 

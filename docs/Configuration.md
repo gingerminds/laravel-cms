@@ -40,7 +40,28 @@ Each preset is a named list of TipTap extensions to enable, which controls both 
         'repository' => MenuItemRepository::class,
         'request'    => MenuItemRequest::class,
     ],
+    'page' => [
+        'model'      => Page::class,
+        'controller' => PageController::class,
+        'repository' => PageRepository::class,
+        'provider'   => PageProvider::class,
+        'request'    => PageRequest::class,
+    ],
+    'page_translation' => [
+        'model' => PageTranslation::class,
+    ],
+    'page_category' => [
+        'model'      => PageCategory::class,
+        'controller' => PageCategoryController::class,
+        'repository' => PageCategoryRepository::class,
+        'request'    => PageCategoryRequest::class,
+    ],
+    'page_category_translation' => [
+        'model' => PageCategoryTranslation::class,
+    ],
 ],
 ```
 
-Read by `Gingerminds\LaravelCms\Resolver\ResourceResolver`, the same class-binding-override pattern used throughout the other Gingerminds packages. `menu_item` has no `provider` entry since `MenuItem` has no directly callable API operations (see [API](./API.md)).
+Read by `Gingerminds\LaravelCms\Resolver\ResourceResolver`, the same class-binding-override pattern used throughout the other Gingerminds packages. `menu_item`, `page_translation` and `page_category_translation` have no `provider`/`controller`/`request` entries: translation models have no controller of their own (edited inline through their parent's form), and `MenuItem` has no directly callable API operations (see [API](./API.md)). `page_category` has no `provider` — `PageCategory` isn't an API resource at all (see [Pages](./Pages.md)).
+
+> **Project convention:** if your app needs to customize any of these (a controller, request, or model), don't edit the package's own config or classes — override the entry in your app's *published* `config/gingerminds-cms.php` to point at your own class instead (make sure to add the matching `use` import at the top of that file).
