@@ -105,10 +105,20 @@ Discovery scans every `path`/`namespace` pair in `gingerminds-cms.block_paths` a
 
 ## Admin editing flow
 
-One canvas per language tab (`<x-gingerminds-cms::form.inputs.canvas>`, in `pages/pages/partials/translation-field.blade.php`). State lives in the DOM: each block is a `.cms-block-item` carrying a JSON `<script>` tag (`{uid, type, data}`); the hidden `translations[{lang}][content]` input is resynced from that DOM state after every change. `content-blocks.js` orchestrates:
+One canvas per language tab (`<x-gingerminds-cms::form.inputs.canvas>`, in `pages/pages/partials/translation-field.blade.php`). Takes a `field` prop (defaults to `'content'`) naming the translation attribute the blocks live on, so the component isn't tied to `Page`/`content` specifically — passing `field="body"` (for example) reads/writes `translations[{lang}][body]` instead. State lives in the DOM: each block is a `.cms-block-item` carrying a JSON `<script>` tag (`{uid, type, data}`); the hidden `translations[{lang}][{field}]` input is resynced from that DOM state after every change. Block markup is cloned from `<template>` tags declared once in the canvas component (`@once`), not built from HTML strings.
+
+JS lives under `resources/js/components/blocks/`, one file per concern, wired together by `content-blocks.js` (canvas init + click delegation only):
+- `dom.js` — cloning the `<template>`s, resyncing the hidden input, rebuilding the "add a block" insert slots.
+- `add-block.js` — the picker (step 1) and schema-driven form modal (step 2), add and edit both go through here.
+- `remove-block.js` — the removal confirmation modal.
+- `copy-structure.js` — the "copy structure" language picker and confirmation.
+
+Orchestration:
 
 1. **Add** — "Add a block" opens the picker modal (step 1, rendered server-side from `BlockRegistry::active()`, no ajax). Picking a type closes it and opens the form modal (step 2), whose body is fetched from `GET .../pages/blocks/{key}/form` (`PageBlockController::form`) — the schema-driven fragment described above.
 2. **Save (in modal)** — submits to `POST .../pages/blocks/{key}/validate` (`PageBlockController::validateBlock`), which validates against the block's field schema and returns its rendered preview fragment. The preview is never built client-side. On validation failure, errors are mapped back onto the corresponding inputs in the modal.
+
+   Both actions share the same non-Page-specific plumbing via `Blocks\BlockRequestSupport`: resolving the block by key (or 404), resolving/generating its uid (`Request::input()`, which already merges query string and body regardless of verb — no need to pick between `query()`/`input()`), and rendering a view with the usual `{block, uid, data}` set. `PageBlockController` itself only keeps what's actually Page-specific: the `authorize('update', ...)` check and each endpoint's response shape.
 3. **Edit** — reopens step 2 directly (the type is locked once a block is created), pre-filled from the block's stored data.
 4. **Remove** — after a confirmation prompt, removes the block from the canvas.
 5. **Reorder** — Sortable.js on the block list; only resyncs the hidden input, no server round-trip.
@@ -116,11 +126,16 @@ One canvas per language tab (`<x-gingerminds-cms::form.inputs.canvas>`, in `page
 
 ## Full revalidation on page save
 
-The per-block ajax validation above only guards against mistakes while editing; the actual save (`PageController::store`/`update` → `PageRequest`) revalidates the *entire* `content` array server-side, reusing the same field schema (`BlockFieldValidator::rulesForBlock()` — one place, one set of rules per block, shared with `PageBlockController`):
+The per-block ajax validation above only guards against mistakes while editing; the actual save (`PageController::store`/`update` → `PageRequest`) revalidates the *entire* `content` array server-side, reusing the same field schema (`BlockFieldValidator::rulesForBlock()` — one place, one set of rules per block, shared with `PageBlockController`).
 
-- `PageRequest::prepareForValidation()` decodes the submitted JSON string into a PHP array (matching the `array` cast on `PageTranslation::content`), then prunes each block's `data` down to the keys its type's field schema *currently* declares (`pruneUnknownBlockFields()`). Without this, a field removed from a block's config would stay in the stored JSON forever — the ajax modal only ever writes the fields it currently renders, so a page saved without reopening that specific block would otherwise keep carrying the stale key indefinitely. Blocks of an unrecognized type are left untouched, so a save that races a deploy doesn't destroy data outright.
-- `PageRequest::contentFieldRules()` builds `translations.{lang}.content.{index}.type` / `.uid` / `.data.{field}` rules for every submitted block, based on its declared type.
+The three concerns involved (decode + prune, validation rules, attribute labels) live in `Blocks\ContentFieldSupport` rather than in `PageRequest` itself — every method takes the field's dot-path prefix (e.g. `translations.3.content`) as a parameter, so it isn't tied to `Page`/`content` specifically and can be reused by any other FormRequest with its own block canvas field:
+
+- `ContentFieldSupport::decodeAndPrune()` — called from `PageRequest::prepareForValidation()` — decodes the submitted JSON string into a PHP array (matching the `array` cast on `PageTranslation::content`), then prunes each block's `data` down to the keys its type's field schema *currently* declares. Without this, a field removed from a block's config would stay in the stored JSON forever — the ajax modal only ever writes the fields it currently renders, so a page saved without reopening that specific block would otherwise keep carrying the stale key indefinitely. Blocks of an unrecognized type are left untouched, so a save that races a deploy doesn't destroy data outright.
+- `ContentFieldSupport::rulesFor()` — called from `PageRequest`'s `translationFieldRules()` — builds `{prefix}.{index}.type` / `.uid` / `.data.{field}` rules for every submitted block, based on its declared type.
+- `ContentFieldSupport::attributesFor()` — called from `PageRequest::contentAttributes()` — labels each block field individually (e.g. "Title — Title + Text (FR)") so a validation error reads naturally.
 - On failure, `<x-gingerminds-cms::form.inputs.canvas>` re-renders from `old('content')` (prioritized over the DB value) and highlights the exact block that failed — errors are keyed by array index, which matches the render order, so no separate uid-mapping step is needed.
+
+Two other cross-field checks that used to live inline in `PageRequest` are now their own classes under `Services\Page\` (resolved via `app()`, not constructor injection — `FormRequest::createFrom()` bypasses the container, so a required constructor dependency would break it): `PageUrlCollisionValidator` (composed path uniqueness, in `withValidator()`) and `PageCategoryUniquenessValidator` (the `is_unique` category constraint, in `categoryIdRules()`).
 
 ## API
 

@@ -6,6 +6,7 @@ Menus, pages, and a WYSIWYG editor for Laravel projects built on `gingerminds/la
 - An admin CRUD for menus with a drag-and-drop tree UI for reordering items.
 - `Page` and `PageCategory` models — site-scoped, translatable, with nested categories, optional page-category assignment, and a precomputed per-language URL index (`PageUrl`) kept automatically in sync.
 - An admin CRUD for pages and page categories, including a "choose category" tree modal shared with `laravel-media-manager`'s look.
+- A content block system for `PageTranslation::content` (schema-driven blocks, extensible/overridable per project), with a reference "Title + Text" block.
 - A TipTap-based WYSIWYG editor Blade component, with configurable toolbar presets.
 - A read-only API exposing menus and their active item tree, plus pages (by id, by path, or by code).
 
@@ -33,4 +34,5 @@ Then register the package's models with API Platform (see [Installation](docs/In
 - [Components](docs/Components.md) — the WYSIWYG editor
 - [Menus](docs/Menus.md) — models, admin screens, drag-and-drop reordering
 - [Pages](docs/Pages.md) — models, home-page semantics, admin screens, filters
+- [Blocks](docs/Blocks.md) — content block contract, registry, admin editing flow
 - [API](docs/API.md) — admin routes and API Platform endpoints
