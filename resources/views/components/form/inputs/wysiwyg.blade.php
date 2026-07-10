@@ -22,12 +22,6 @@
         ?? config('gingerminds-cms.wysiwyg.presets.default');
 @endphp
 
-<style>
-    .wysiwyg-wrapper .wysiwyg-btn { color: #495057; }
-    .wysiwyg-wrapper .wysiwyg-btn:hover { color: #495057; background-color: #e9ecef; border-color: #adb5bd; }
-    .wysiwyg-wrapper .wysiwyg-btn.active { color: #343a40; background-color: #dee2e6; border-color: #adb5bd; }
-</style>
-
 <div class="{{ $sizeClass }}">
     <label for="{{ $id }}" class="form-label">
         {{ $label }}
@@ -40,7 +34,7 @@
         data-wysiwyg-config="{{ json_encode($presetConfig) }}"
         data-wysiwyg-rows="{{ $rows }}"
     >
-        <div class="wysiwyg-toolbar border border-bottom-0 rounded-top p-1 d-flex flex-wrap gap-1" style="background-color: #f8f9fb;"></div>
+        <div class="wysiwyg-toolbar border border-bottom-0 rounded-top p-1 d-flex flex-wrap gap-1"></div>
         <div class="wysiwyg-editor border rounded-bottom p-2"></div>
         <textarea
             name="{{ $fieldName }}"

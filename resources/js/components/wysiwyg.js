@@ -2,6 +2,7 @@ import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import Underline from '@tiptap/extension-underline';
+import './wysiwyg.css';
 
 const TOOLBAR_BUTTONS = {
     bold: {
@@ -171,6 +172,18 @@ function initWysiwyg(container) {
     }
 }
 
+// Exported so callers that inject new markup after the initial page load
+// (e.g. content-blocks.js loading a block's form fragment via ajax) can
+// initialize wysiwyg fields that didn't exist yet at DOMContentLoaded time.
+export function initWysiwygFields(root = document) {
+    root.querySelectorAll('[data-wysiwyg]').forEach((container) => {
+        // Guard against double-init if the same fragment is scanned twice.
+        if (container.dataset.wysiwygInitialized) return;
+        container.dataset.wysiwygInitialized = 'true';
+        initWysiwyg(container);
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('[data-wysiwyg]').forEach(initWysiwyg);
+    initWysiwygFields();
 });
