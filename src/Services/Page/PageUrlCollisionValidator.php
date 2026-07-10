@@ -42,7 +42,7 @@ class PageUrlCollisionValidator
                 continue;
             }
 
-            $slug         = $fields['slug'] ?? '';
+            $slug         = $fields['slug']                                   ?? '';
             $categoryPath = $category?->getFullPathForLanguage((int) $langId) ?? '';
             $path         = Page::composePath($categoryPath, $slug);
 

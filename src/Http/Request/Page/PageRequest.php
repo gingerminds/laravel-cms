@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace Gingerminds\LaravelCms\Http\Request\Page;
 
 use Closure;
+use Gingerminds\LaravelCms\Blocks\ContentFieldSupport;
 use Gingerminds\LaravelCms\Models\Page\Page;
 use Gingerminds\LaravelCms\Models\Page\PageTranslation;
-use Gingerminds\LaravelCms\Models\Page\PageUrl;
 use Gingerminds\LaravelCms\Models\PageCategory\PageCategory;
+use Gingerminds\LaravelCms\Services\Page\PageCategoryUniquenessValidator;
+use Gingerminds\LaravelCms\Services\Page\PageUrlCollisionValidator;
 use Gingerminds\LaravelCore\Http\Requests\FormRequestInterface;
 use Gingerminds\LaravelMultisite\Http\Requests\Concerns\BuildsTranslationAttributesTrait;
 use Gingerminds\LaravelMultisite\Services\Context\SiteContext;
@@ -23,7 +25,30 @@ class PageRequest extends FormRequest implements FormRequestInterface
 
     private const array FILE_FIELDS = ['main_visual', 'thumbnail'];
 
-    private const array OPTIONAL_TEXT_FIELDS = ['hook', 'content', 'slug'];
+    // `content` isn't in here: it gets its own array/block-schema rules
+    // from contentFieldRules(), not the generic required/nullable string
+    // rule the other optional fields get.
+    private const array OPTIONAL_TEXT_FIELDS = ['hook', 'slug'];
+
+    private const string CONTENT_FIELD = 'content';
+
+    /**
+     * The hidden `content` input submits a JSON string (see
+     * `<x-gingerminds-cms::form.inputs.canvas>`); decode it into a PHP
+     * array up front so the cast on `PageTranslation::content` ('array')
+     * doesn't double-encode it later, and so `content.*` rules below can
+     * validate it as a real array. Pruning of stale block fields also
+     * happens here — see `ContentFieldSupport::decodeAndPrune()`.
+     */
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'translations' => ContentFieldSupport::decodeAndPrune(
+                $this->input('translations', []),
+                self::CONTENT_FIELD
+            ),
+        ]);
+    }
 
     /** @return array<string, mixed> */
     public function rules(): array
@@ -84,37 +109,9 @@ class PageRequest extends FormRequest implements FormRequestInterface
             'nullable',
             Rule::exists('page_categories', 'id')->where(fn ($query) => $query->where('site_id', $siteId)),
             function (string $attribute, mixed $value, Closure $fail) use ($page): void {
-                $this->failIfCategoryAlreadyUniquelyUsed($value, $fail, $page);
+                app(PageCategoryUniquenessValidator::class)->ensureNotAlreadyUsed($value, $fail, $page);
             },
         ];
-    }
-
-    /**
-     * `is_unique` categories (see `PageCategory`) may only ever have one
-     * page attached — this is that constraint's actual enforcement point.
-     */
-    private function failIfCategoryAlreadyUniquelyUsed(mixed $categoryId, Closure $fail, ?Page $page): void
-    {
-        if (!$categoryId) {
-            return;
-        }
-
-        /** @var PageCategory|null $category */
-        $category = PageCategory::find($categoryId);
-
-        if (!$category?->is_unique) {
-            return;
-        }
-
-        $pageId = $page?->id;
-
-        $alreadyUsed = $category->pages()
-            ->when($pageId, fn ($query) => $query->where('id', '!=', $pageId))
-            ->exists();
-
-        if ($alreadyUsed) {
-            $fail(__('gingerminds-cms::translation.pages.message.is_unique_taken'));
-        }
     }
 
     /**
@@ -138,7 +135,7 @@ class PageRequest extends FormRequest implements FormRequestInterface
         }
 
         foreach ($this->input("translations.$langId", []) as $field => $value) {
-            if ($this->isFileOrRemoveField((string) $field)) {
+            if ($this->isFileOrRemoveField((string) $field) || $field === self::CONTENT_FIELD) {
                 continue;
             }
 
@@ -151,7 +148,13 @@ class PageRequest extends FormRequest implements FormRequestInterface
             $rules["translations.$langId.$field"] = $fieldRules;
         }
 
-        return $rules;
+        return [
+            ...$rules,
+            ...ContentFieldSupport::rulesFor(
+                "translations.$langId." . self::CONTENT_FIELD,
+                $this->input("translations.$langId." . self::CONTENT_FIELD, [])
+            ),
+        ];
     }
 
     private function isFileOrRemoveField(string $field): bool
@@ -201,37 +204,14 @@ class PageRequest extends FormRequest implements FormRequestInterface
             $categoryId = $this->filled('category_id') ? (int) $this->input('category_id') : null;
             /** @var PageCategory|null $category */
             $category = $categoryId ? PageCategory::find($categoryId) : null;
-            $pageId   = $page?->id;
 
-            foreach ($this->input('translations', []) as $langId => $fields) {
-                if (!array_key_exists('slug', $fields)) {
-                    continue;
-                }
-
-                $title = $fields['title'] ?? '';
-
-                if ('' === $title) {
-                    continue;
-                }
-
-                $slug         = $fields['slug']                                   ?? '';
-                $categoryPath = $category?->getFullPathForLanguage((int) $langId) ?? '';
-                $path         = Page::composePath($categoryPath, $slug);
-
-                $collision = PageUrl::query()
-                    ->where('site_id', $siteId)
-                    ->where('language_id', $langId)
-                    ->where('path', $path)
-                    ->when($pageId, fn ($query) => $query->where('page_id', '!=', $pageId))
-                    ->exists();
-
-                if ($collision) {
-                    $validator->errors()->add(
-                        "translations.$langId.slug",
-                        __('gingerminds-cms::translation.pages.message.url_taken')
-                    );
-                }
-            }
+            app(PageUrlCollisionValidator::class)->validate(
+                $validator,
+                $this->input('translations', []),
+                $page,
+                $siteId,
+                $category
+            );
         });
     }
 
@@ -257,6 +237,35 @@ class PageRequest extends FormRequest implements FormRequestInterface
             'hook'        => __('gingerminds-cms::translation.form.hook'),
             'main_visual' => __('gingerminds-cms::translation.form.main_visual'),
             'thumbnail'   => __('gingerminds-media-manager::translation.form.thumbnail'),
-        ]);
+        ]) + $this->contentAttributes();
+    }
+
+    /**
+     * `translationAttributes()` only labels top-level translation fields;
+     * `ContentFieldSupport::attributesFor()` labels each block field
+     * individually (e.g. "Title — Title + Text (FR)") so a content
+     * validation error reads naturally instead of showing the raw
+     * "translations.3.content.2.data.title" key. This method's own job is
+     * just resolving the per-language label to fold into that.
+     *
+     * @return array<string, string>
+     */
+    private function contentAttributes(): array
+    {
+        $attributes = [];
+        $languages  = app(SiteContext::class)->site()?->languages ?? collect(); // @phpstan-ignore nullsafe.neverNull
+
+        foreach ($this->input('translations', []) as $langId => $fields) {
+            $language      = $languages->firstWhere('id', $langId);
+            $languageLabel = $language->iso ?? $langId;
+
+            $attributes += ContentFieldSupport::attributesFor(
+                "translations.$langId." . self::CONTENT_FIELD,
+                $fields[self::CONTENT_FIELD] ?? [],
+                (string) $languageLabel
+            );
+        }
+
+        return $attributes;
     }
 }
