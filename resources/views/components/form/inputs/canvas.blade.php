@@ -3,121 +3,53 @@
     use Gingerminds\LaravelCms\Blocks\BlockRegistry;
     use Illuminate\Support\Str;
 @endphp
-{{--
-    Per-language content block canvas. Same family as the wysiwyg/basic
-    input components (form field embedded in translation-field.blade.php),
-    not a generic include — see docs/Blocks.md for the full editing flow
-    (add/edit/remove/reorder, validation on save).
---}}
 @props([
     'language',
     'translation' => null,
+    'field' => 'content',
 ])
 
 @php
-    // A previously failed page save takes priority over what's persisted in
-    // DB: the canvas must rehydrate from old('content') first, see
-    // docs/Blocks.md. PageRequest::prepareForValidation() already decodes
-    // the submitted JSON string into a PHP array before it's flashed, so
-    // old() here returns an array, not a JSON string.
-    $oldContent = old('translations.' . $language->id . '.content');
-    $content    = is_array($oldContent) ? $oldContent : ($translation?->content ?? []);
+    $oldContent = old('translations.' . $language->id . '.' . $field);
+    $content    = is_array($oldContent) ? $oldContent : ($translation?->{$field} ?? []);
 @endphp
 
-{{-- Scoped styles for the block canvas. @once because this component is
-     rendered once per language tab — no need to repeat the same <style>
-     block for every one of them. Follows the same bare-<style>-in-partial
-     convention used elsewhere in the package (see wysiwyg.blade.php). --}}
 @once
-    <style>
-        .cms-block-item {
-            background: #fff;
-            /* Same reasoning as the toolbar background below: a flat
-               low-alpha black stays light and neutral regardless of what
-               --bs-border-color resolves to on this theme. */
-            border: 1px solid rgba(0, 0, 0, .04);
-            border-radius: .75rem;
-            overflow: hidden;
-            transition: box-shadow .15s ease, border-color .15s ease;
-        }
+    <template id="cmsBlockItemTemplate">
+        <div class="cms-block-item mb-3" data-cms-block>
+            <div class="cms-block-item-toolbar d-flex align-items-center gap-1 px-3 py-1">
+                <span class="drag-handle d-inline-flex align-items-center me-1"><i class="bi bi-grip-vertical"></i></span>
+                <span class="cms-block-item-label fw-semibold flex-grow-1"></span>
+                <button type="button" class="btn-icon cms-block-edit"><i class="bi bi-pencil-square"></i></button>
+                <button type="button" class="btn-icon cms-block-remove"><i class="bi bi-trash"></i></button>
+            </div>
+            <div class="cms-block-item-preview"></div>
+            <script type="application/json" class="cms-block-data"></script>
+        </div>
+    </template>
 
-        .cms-block-item:hover {
-            box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .06);
-        }
+    <template id="cmsBlockAddButtonTemplate">
+        <button type="button" class="btn btn-outline-primary btn-sm cms-block-add">
+            <i class="bi bi-plus-lg me-1"></i><span class="cms-block-add-label"></span>
+        </button>
+    </template>
 
-        .cms-block-item.has-error {
-            border-color: var(--bs-danger);
-        }
+    <template id="cmsBlockInsertSlotTemplate">
+        <div class="cms-block-insert-slot text-center my-2"></div>
+    </template>
 
-        .cms-block-item-toolbar {
-            /* Deliberately not tied to the theme's --bs-tertiary-bg /
-               --bs-light variables — on this admin theme those resolve to
-               a fairly saturated blue-tinted gray, too strong for a plain
-               toolbar strip. A flat low-alpha black reads as neutral on
-               any theme. */
-            background: rgba(0, 0, 0, .015);
-            border-bottom: 1px solid rgba(0, 0, 0, .04);
-        }
+    <template id="cmsBlockEmptyStateTemplate">
+        <div class="cms-block-insert-slot text-center py-4">
+            <p class="text-muted mb-2"></p>
+        </div>
+    </template>
 
-        .cms-block-item-toolbar .cms-block-item-label {
-            color: var(--bs-secondary-color);
-            font-weight: 500;
-        }
-
-        .cms-block-item-toolbar .drag-handle {
-            color: var(--bs-secondary-color);
-            cursor: grab;
-        }
-
-        .cms-block-item-toolbar .btn-icon {
-            width: 1.6rem;
-            height: 1.6rem;
-            font-size: .875rem;
-            padding: 0;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border: none;
-            border-radius: .5rem;
-            background: transparent;
-        }
-
-        /* Edit/remove read at a glance by color rather than only on hover
-           — blue for edit (a normal, non-destructive action), red for
-           remove (destructive). Hover just adds a soft same-color tint. */
-        .cms-block-item-toolbar .cms-block-edit {
-            color: var(--bs-primary);
-        }
-
-        .cms-block-item-toolbar .cms-block-edit:hover {
-            background: rgba(var(--bs-primary-rgb), .1);
-        }
-
-        .cms-block-item-toolbar .cms-block-remove {
-            color: var(--bs-danger);
-        }
-
-        .cms-block-item-toolbar .cms-block-remove:hover {
-            background: rgba(var(--bs-danger-rgb), .1);
-        }
-
-        .cms-block-item-preview {
-            padding: 1rem 1.25rem;
-        }
-
-        .cms-block-insert-slot {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: .5rem;
-            margin: .5rem 0;
-        }
-
-        .cms-block-insert-slot .cms-block-add {
-            border-radius: 2rem;
-        }
-    </style>
+    <template id="cmsBlockLoadingTemplate">
+        <div class="text-center text-muted py-4">
+            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+            <span class="cms-block-loading-label"></span>
+        </div>
+    </template>
 @endonce
 
 <div
@@ -127,21 +59,7 @@
         data-cms-blocks-language-label="{{ strtoupper($language->iso) }}"
 >
     <div class="d-flex justify-content-end mb-2">
-        {{-- Lets someone reuse an already-built structure instead of
-             recreating it block by block for every language — see
-             docs/Blocks.md. The language list is populated by
-             content-blocks.js from the other `.cms-blocks-canvas` elements
-             already present in the DOM (all language tabs are rendered at
-             once, see gingerminds-multisite's translations component), not
-             passed down as a Blade prop. --}}
         <button type="button" class="btn btn-sm btn-outline-warning cms-blocks-copy-trigger">
-            {{-- bi-translate, not a "copy" icon: this app's icon font is a
-                 curated subset built from icons already referenced
-                 elsewhere in the codebase (see docs/Blocks.md) — icon
-                 classes with no prior usage anywhere silently render empty
-                 (bit us once already with bi-pencil vs bi-pencil-square).
-                 bi-translate is already confirmed present and fits a
-                 cross-language action well. --}}
             <i class="bi bi-translate me-1"></i>@lang('gingerminds-cms::translation.blocks.action.copy_structure')
         </button>
     </div>
@@ -155,13 +73,7 @@
                     ? array_merge(BlockFieldValidator::defaultsForBlock($block), $item['data'] ?? [])
                     : ($item['data'] ?? []);
                 $uid = $item['uid'] ?? (string) Str::uuid();
-
-                // Full-content revalidation on page save (see PageRequest)
-                // keys errors as translations.{lang}.content.{index}.*  —
-                // same index as this loop, so no separate uid-mapping pass
-                // is needed on the JS side: the block that failed is
-                // exactly the one rendered here with its errors.
-                $errorPrefix = "translations.{$language->id}.content.{$loop->index}.";
+                $errorPrefix = "translations.{$language->id}.{$field}.{$loop->index}.";
                 $blockErrors = collect($errors->getMessages())
                     ->filter(fn ($messages, $key) => str_starts_with($key, $errorPrefix))
                     ->flatten()
@@ -202,26 +114,16 @@
                         </div>
                     @endif
                 </div>
-                {{-- {!! !!}, not {{ }}: this is <script> content, not HTML —
-                     Blade's default {{ }} HTML-entity-escapes quotes, which
-                     never get decoded by the browser inside a <script> tag
-                     and silently breaks JSON.parse() client-side. --}}
                 <script type="application/json"
                         class="cms-block-data">{!! json_encode(['uid' => $uid, 'type' => $blockType, 'data' => $blockData]) !!}</script>
             </div>
         @endforeach
     </div>
 
-    {{-- "Add a block" slots (before each block, plus one at the very end,
-         or a single centered empty-state if there's no block yet) are
-         rendered/kept in sync by content-blocks.js's refreshInsertSlots(),
-         not here — one source of truth for that markup, since it also has
-         to be rebuilt after every add/edit/remove/reorder. --}}
-
     <input
             type="hidden"
-            name="translations[{{ $language->id }}][content]"
-            id="translations_{{ $language->id }}_content"
+            name="translations[{{ $language->id }}][{{ $field }}]"
+            id="translations_{{ $language->id }}_{{ $field }}"
             class="cms-blocks-input"
             value="{{ json_encode($content) }}"
     >
