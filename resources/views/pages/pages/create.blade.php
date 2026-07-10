@@ -36,3 +36,5 @@
         @include('gingerminds-cms::pages.pages.partials.fields_translations')
     </div>
 @endsection
+
+@include('gingerminds-cms::blocks.partials.assets')

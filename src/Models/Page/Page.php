@@ -201,7 +201,7 @@ class Page extends Model implements ResourceModelInterface, FilterableModelInter
         };
     }
 
-    public function getHook(): ?string
+    public function getHookAttribute(): ?string
     {
         /** @var PageTranslation|null $translation */
         $translation = $this->currentTranslation;
@@ -209,7 +209,10 @@ class Page extends Model implements ResourceModelInterface, FilterableModelInter
         return $translation?->hook;
     }
 
-    public function getContent(): ?string
+    /**
+     * @return array<int, array<string, mixed>>|null
+     */
+    public function getContentAttribute(): ?array
     {
         /** @var PageTranslation|null $translation */
         $translation = $this->currentTranslation;

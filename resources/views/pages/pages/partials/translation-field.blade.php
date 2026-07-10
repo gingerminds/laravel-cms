@@ -1,6 +1,9 @@
 <div class="row">
     <div class="col-lg-8">
-        //content
+        <x-gingerminds-cms::form.inputs.canvas
+            :language="$language"
+            :translation="$translation"
+        />
     </div>
     <div class="col-lg-4">
         <div class="row mb-3">

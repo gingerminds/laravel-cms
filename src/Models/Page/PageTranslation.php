@@ -15,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $title
  * @property string|null $slug
  * @property string|null $hook
- * @property string|null $content
+ * @property array<int, array<string, mixed>>|null $content
  * @property int|null $main_visual_id
  * @property int|null $thumbnail_id
  * @property-read Language $language
@@ -25,6 +25,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class PageTranslation extends Model
 {
     use TranslationModelTrait;
+
+    /**
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'content' => 'array',
+    ];
 
     /**
      * @return string[]
