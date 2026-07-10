@@ -2,7 +2,7 @@
 
 `PageTranslation::content` holds the page body as a flat, ordered JSON array of blocks: `[{uid, type, data}, ...]`. Each block is a small class describing its own fields; the admin form, validation, and preview are all generated from that description — adding a simple block needs no new Blade view and no new JS.
 
-This covers step 2 of the design in `docs/ContentBlocks.md` (the block system itself, one reference block: Title + Text). The `make:cms-block` scaffolding command and the remaining blocks (link list, card list, media gallery, slider) are a later step.
+This covers step 2 of the design in `docs/ContentBlocks.md` (the block system itself, one reference block: Title + Text, and the `make:cms-block` scaffolding command). The remaining blocks (link list, card list, media gallery, slider) are a later step.
 
 ## The `BlockInterface` contract
 
@@ -79,6 +79,23 @@ Static, same style as `ResourceResolver`.
 
 Discovery scans every `path`/`namespace` pair in `gingerminds-cms.block_paths` and keeps any concrete, non-abstract class implementing `BlockInterface`. By default that's this package's own `src/Blocks/Type` and the project's `app/Cms/Blocks` — a block can live *only* project-side if its dependency isn't available package-side (e.g. a media gallery block depending on `laravel-media-manager`, which isn't a dependency of this package).
 
+Two blocks can never share a `key()`: `discover()` throws a `RuntimeException` naming both classes the moment it finds a second one declaring an already-seen key, instead of letting the second silently win (a plain array write keyed by `key()` would otherwise do exactly that). `make:cms-block` (below) already refuses to *generate* a colliding key, but this check is what catches it for a hand-written or copy-pasted block that bypasses the command.
+
+## Scaffolding a block: `make:cms-block`
+
+```bash
+php artisan make:cms-block BlockImage
+```
+
+Creates the block class in the project — `App\Cms\Blocks`, i.e. `app/Cms/Blocks/BlockImage.php` — plus its admin preview view at `resources/views/cms/blocks/block-image/preview.blade.php`, and nothing else: both are auto-discovered (see above), there's no registry entry to add by hand.
+
+- **Class name** is the only thing given — `BlockImage`, studly-cased if typed differently (`block image` also works). No separate "key" prompt: the `key()` returned by the generated class is `Str::snake($class)` (`BlockImage` → `block_image`), the same convention every block in this package already follows (`TitleText` → `title_text`). One name to pick per block, not two that can drift apart.
+- **Uniqueness is checked twice**, both before anything is written to disk:
+  1. The command aborts if `app/Cms/Blocks/{Class}.php` already exists.
+  2. The command computes the key first and aborts — naming the conflicting class — if any block already returned by `BlockRegistry::all()` already uses it. This is the check the command exists to run: it's the one place a key collision can be caught *before* it happens, since the class doesn't exist yet at this point and so can't itself have been part of the scan being checked against.
+- The generated class's `label()`, `icon()`, and `fields()` are placeholders (one example `text` field) meant to be edited — see the field schema above for what's available.
+- Both stubs (`stubs/block.stub`, `stubs/block-preview.stub`) can be customized project-wide via `php artisan vendor:publish --tag=gingerminds-stubs`, which copies them to `stubs/vendor/gingerminds-cms/` — checked first if present, same mechanism `gingerminds-core`'s own `make:*` commands use for their stubs.
+
 ## Configuration
 
 ```php
@@ -143,4 +160,4 @@ Two other cross-field checks that used to live inline in `PageRequest` are now t
 
 ## Out of scope for this step
 
-Repeatable fields (`type: repeater`), reference fields + the API resolver, the `formView()` custom-Blade escape hatch, picker categories, and the `make:cms-block` scaffolding command are all deliberately not implemented yet — see `docs/ContentBlocks.md` for the full design and rationale. None of them are needed for `title_text`; they'll be introduced with step 3's blocks.
+Repeatable fields (`type: repeater`), reference fields + the API resolver, the `formView()` custom-Blade escape hatch, and picker categories are all deliberately not implemented yet — see `docs/ContentBlocks.md` for the full design and rationale. None of them are needed for `title_text`; they'll be introduced with step 3's blocks.

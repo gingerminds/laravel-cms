@@ -1,6 +1,6 @@
 # Blocs de contenu éditorial (Content Builder) — Spécification
 
-> Statut : document de conception d'origine (organisation/réflexion), pas la documentation du système livré. Étape 2 (système de blocs, bloc Titre + Texte) est implémentée — voir `docs/Blocks.md` pour la doc réelle. Ce fichier reste la référence pour l'étape 3 (autres blocs) et `make:cms-block`, non encore implémentés.
+> Statut : document de conception d'origine (organisation/réflexion), pas la documentation du système livré. Étape 2 (système de blocs, bloc Titre + Texte, commande `make:cms-block`) est implémentée — voir `docs/Blocks.md` pour la doc réelle. Ce fichier reste la référence pour l'étape 3 (autres blocs), non encore implémentée.
 
 ## Contexte
 
