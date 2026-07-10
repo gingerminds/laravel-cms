@@ -9,6 +9,7 @@ use Gingerminds\LaravelCms\ApiProvider\Menu\MenuProvider;
 use Gingerminds\LaravelCms\ApiProvider\Page\PageProvider;
 use Gingerminds\LaravelCms\Http\Controllers\Menu\MenuController;
 use Gingerminds\LaravelCms\Http\Controllers\Menu\MenuItemController;
+use Gingerminds\LaravelCms\Http\Controllers\Page\PageBlockController;
 use Gingerminds\LaravelCms\Http\Controllers\Page\PageController;
 use Gingerminds\LaravelCms\Http\Controllers\PageCategory\PageCategoryController;
 use Gingerminds\LaravelCms\Http\Middleware\Api\InjectPageFiltersMiddleware;
@@ -42,6 +43,9 @@ class LaravelCmsServiceProvider extends ServiceProvider
             __DIR__ . '/../../config/gingerminds-cms.php',
             'gingerminds-cms'
         );
+
+        $this->mergeAdditiveArrayConfig('disabled_blocks');
+        $this->mergeAdditiveArrayConfig('block_paths', 'path');
 
         $this->bindResources();
 
@@ -100,7 +104,11 @@ class LaravelCmsServiceProvider extends ServiceProvider
             __DIR__ . '/../../config/gingerminds-cms.php' => config_path('gingerminds-cms.php'),
         ], 'gingerminds-cms-config');
 
-        // Publication des assets JS (pas de SCSS dans ce package)
+        // Publication des assets JS. Pas de tag/config dédié pour le CSS :
+        // les quelques styles du package (ex. content-blocks.css) sont
+        // co-localisés avec leur JS et importés depuis celui-ci, donc ils
+        // sont publiés avec le reste de resources/js sans configuration
+        // Vite supplémentaire côté projet consommateur.
         if ($this->app->runningInConsole()) {
             $this->publishes([
                 __DIR__ . '/../../resources/js' => resource_path('js/vendor/gingerminds-cms'),
@@ -217,5 +225,41 @@ class LaravelCmsServiceProvider extends ServiceProvider
             PageCategoryTranslation::class,
             ResourceResolver::model('page_category_translation')
         );
+
+        $this->app->bind(
+            PageBlockController::class,
+            ResourceResolver::controller('page_block')
+        );
+    }
+
+    /**
+     * `mergeConfigFrom()` only merges shallowly: a top-level array key
+     * present in a project's published config completely replaces the
+     * package's default for that key, instead of extending it (see
+     * docs/Blocks.md). Re-merges one array key on top of that, combining
+     * the package's own default entries with whatever the project's
+     * published config now holds — additive, not "either/or".
+     */
+    private function mergeAdditiveArrayConfig(string $key, ?string $uniqueBy = null): void
+    {
+        $packageDefaults = require __DIR__ . '/../../config/gingerminds-cms.php';
+        $default         = $packageDefaults[$key] ?? [];
+        $published       = config("gingerminds-cms.{$key}", []);
+
+        $merged = array_merge($default, $published);
+
+        if ($uniqueBy !== null) {
+            // array_column()'s result is already a re-indexed list when no
+            // $index_key is given (the inner call here) — wrapping it in
+            // array_values() again would be a no-op.
+            $merged = array_column(
+                array_column($merged, null, $uniqueBy),
+                null
+            );
+        } else {
+            $merged = array_values(array_unique($merged));
+        }
+
+        config(["gingerminds-cms.{$key}" => $merged]);
     }
 }

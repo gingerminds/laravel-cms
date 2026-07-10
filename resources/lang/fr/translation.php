@@ -76,4 +76,35 @@ return [
             'no_result' => 'Aucune catégorie pour le moment',
         ],
     ],
+
+    'blocks' => [
+        'action' => [
+            'add' => 'Ajouter un bloc',
+            'edit' => 'Modifier ce bloc',
+            'remove' => 'Supprimer ce bloc',
+            'copy_structure' => 'Copier la structure',
+            'copy' => 'Copier',
+        ],
+        'message' => [
+            'no_block' => 'Aucun type de bloc disponible.',
+            'unknown_type' => 'Bloc de type inconnu (:type) — il a peut-être été retiré depuis.',
+            'empty_preview' => 'Bloc vide, cliquez sur modifier pour le remplir.',
+            'empty_canvas' => 'Ajoutez votre premier bloc',
+            'confirm_remove' => 'Voulez-vous vraiment supprimer ce bloc ?',
+            'loading' => 'Chargement…',
+            'load_error' => 'Erreur de chargement du formulaire.',
+            'validate_error' => 'Erreur de validation, réessayez.',
+            'copy_structure_prompt' => 'Choisissez la langue depuis laquelle copier la structure :',
+            'copy_structure_confirm' => 'Voulez-vous dupliquer cette structure ? Cela va supprimer votre structure actuelle.',
+            'copy_structure_empty_source' => 'Cette langue n\'a pas encore de blocs.',
+            'no_other_language' => 'Aucune autre langue disponible.',
+        ],
+        'title_text' => [
+            'label' => 'Titre + Texte',
+            'fields' => [
+                'title' => 'Titre',
+                'text' => 'Texte',
+            ],
+        ],
+    ],
 ];

@@ -76,4 +76,35 @@ return [
             'no_result' => 'No categories yet',
         ],
     ],
+
+    'blocks' => [
+        'action' => [
+            'add' => 'Add a block',
+            'edit' => 'Edit this block',
+            'remove' => 'Remove this block',
+            'copy_structure' => 'Copy structure',
+            'copy' => 'Copy',
+        ],
+        'message' => [
+            'no_block' => 'No block type available.',
+            'unknown_type' => 'Unknown block type (:type) — it may have been removed since.',
+            'empty_preview' => 'Empty block, click edit to fill it in.',
+            'empty_canvas' => 'Add your first block',
+            'confirm_remove' => 'Are you sure you want to remove this block?',
+            'loading' => 'Loading…',
+            'load_error' => 'Error loading the form.',
+            'validate_error' => 'Validation error, please try again.',
+            'copy_structure_prompt' => 'Choose the language to copy the structure from:',
+            'copy_structure_confirm' => 'Do you want to duplicate this structure? This will delete your current structure.',
+            'copy_structure_empty_source' => 'This language has no blocks yet.',
+            'no_other_language' => 'No other language available.',
+        ],
+        'title_text' => [
+            'label' => 'Title + Text',
+            'fields' => [
+                'title' => 'Title',
+                'text' => 'Text',
+            ],
+        ],
+    ],
 ];

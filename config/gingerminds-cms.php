@@ -71,5 +71,33 @@ return [
         'page_category_translation' => [
             'model' => PageCategoryTranslation::class,
         ],
+        'page_block' => [
+            'controller' => \Gingerminds\LaravelCms\Http\Controllers\Page\PageBlockController::class,
+        ],
     ],
+
+    // Content blocks (see docs/Blocks.md). Merged additively at boot time in
+    // LaravelCmsServiceProvider so a project publishing this config only
+    // needs to list what it *adds* — the package's own entries are never
+    // silently dropped by Laravel's shallow mergeConfigFrom().
+    'block_paths' => [
+        [
+            'path' => dirname(__DIR__) . '/src/Blocks/Type',
+            'namespace' => 'Gingerminds\\LaravelCms\\Blocks\\Type\\',
+        ],
+        [
+            'path' => app_path('Cms/Blocks'),
+            'namespace' => 'App\\Cms\\Blocks\\',
+        ],
+    ],
+
+    // Override an existing block class by key: 'title_text' => \App\Cms\Blocks\TitleText::class.
+    'blocks' => [],
+
+    // Block keys hidden from the catalog (step 1 of the add-block modal).
+    // Existing pages using a disabled block still render/validate fine.
+    'disabled_blocks' => [],
+
+    // Catalog sort weight override, without subclassing: 'title_text' => 5.
+    'block_order' => [],
 ];

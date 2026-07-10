@@ -1,0 +1,22 @@
+/* Wysiwyg toolbar styles (see wysiwyg.blade.php), co-located with and
+   imported from wysiwyg.js — same convention as content-blocks.css. */
+
+.wysiwyg-wrapper .wysiwyg-btn {
+    color: #495057;
+}
+
+.wysiwyg-wrapper .wysiwyg-btn:hover {
+    color: #495057;
+    background-color: #e9ecef;
+    border-color: #adb5bd;
+}
+
+.wysiwyg-wrapper .wysiwyg-btn.active {
+    color: #343a40;
+    background-color: #dee2e6;
+    border-color: #adb5bd;
+}
+
+.wysiwyg-wrapper .wysiwyg-toolbar {
+    background-color: #f8f9fb;
+}
