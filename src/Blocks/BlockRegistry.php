@@ -7,6 +7,7 @@ namespace Gingerminds\LaravelCms\Blocks;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use ReflectionClass;
+use RuntimeException;
 
 /**
  * Content block registry.
@@ -118,8 +119,24 @@ class BlockRegistry
         foreach ($classes as $class) {
             /** @var BlockInterface $instance */
             $instance = app($class);
+            $key      = $instance->key();
 
-            $blocks[$instance->key()] = $instance;
+            // Without this check two blocks sharing a key would silently
+            // fight over the same slot (the last one scanned wins, see
+            // `all()`'s docblock) — `make:cms-block` already refuses to
+            // generate a colliding key, but a hand-written or copy-pasted
+            // block bypasses that guard, so it's enforced here too.
+            if (isset($blocks[$key]) && $blocks[$key]::class !== $class) {
+                throw new RuntimeException(sprintf(
+                    'Duplicate content block key "%s": both %s and %s declare it. '
+                        . 'Block keys must be unique (see docs/Blocks.md).',
+                    $key,
+                    $blocks[$key]::class,
+                    $class
+                ));
+            }
+
+            $blocks[$key] = $instance;
         }
 
         // Explicit config override, like ResourceResolver for other

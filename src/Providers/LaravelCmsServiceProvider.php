@@ -7,6 +7,7 @@ namespace Gingerminds\LaravelCms\Providers;
 use ApiPlatform\State\ProviderInterface;
 use Gingerminds\LaravelCms\ApiProvider\Menu\MenuProvider;
 use Gingerminds\LaravelCms\ApiProvider\Page\PageProvider;
+use Gingerminds\LaravelCms\Console\Commands\Make\CreateBlock;
 use Gingerminds\LaravelCms\Http\Controllers\Menu\MenuController;
 use Gingerminds\LaravelCms\Http\Controllers\Menu\MenuItemController;
 use Gingerminds\LaravelCms\Http\Controllers\Page\PageBlockController;
@@ -113,6 +114,17 @@ class LaravelCmsServiceProvider extends ServiceProvider
             $this->publishes([
                 __DIR__ . '/../../resources/js' => resource_path('js/vendor/gingerminds-cms'),
             ], 'gingerminds-assets');
+
+            // Lets a project customize the block/preview stubs used by
+            // `make:cms-block` the same way `gingerminds-core` publishes
+            // its own (checked first by CreateBlock::stub()).
+            $this->publishes([
+                __DIR__ . '/../../stubs' => base_path('stubs/vendor/gingerminds-cms'),
+            ], 'gingerminds-stubs');
+
+            $this->commands([
+                CreateBlock::class,
+            ]);
         }
     }
 

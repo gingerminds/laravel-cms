@@ -1,0 +1,15 @@
+{{--
+    Admin preview for the "__KEY__" block (structural only — see
+    docs/Blocks.md, the headless frontend renders the real thing). Included
+    via `@include($block->previewView(), [...])`, not a Blade component, so
+    `$block`/`$data`/`$uid` are plain variables here, not props.
+--}}
+<div class="cms-block-preview cms-block-preview-__KEBAB__">
+    @if(!empty($data['title']))
+        <h3 class="cms-block-preview-title">{{ $data['title'] }}</h3>
+    @endif
+
+    @if(empty($data['title']))
+        <p class="text-muted mb-0 fst-italic">Empty block</p>
+    @endif
+</div>
