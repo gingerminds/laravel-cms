@@ -27,12 +27,12 @@ class Cards extends AbstractBlock
 
     public function icon(): string
     {
-        return 'bi-grid-3x3-gap';
+        return 'bi-grid-3x2-gap';
     }
 
     public function order(): int
     {
-        return 120;
+        return 300;
     }
 
     public function fields(): array
@@ -55,18 +55,19 @@ class Cards extends AbstractBlock
                 'rows'     => 6,
             ],
             [
-                'name'      => 'cards',
-                'type'      => 'repeater',
-                'label'     => __('gingerminds-cms::translation.blocks.cards.fields.cards'),
-                'required'  => false,
-                'default'   => [],
-                'add_label' => __('gingerminds-cms::translation.blocks.cards.fields.add_card'),
-                'fields'    => [
+                'name'       => 'cards',
+                'type'       => 'repeater',
+                'label'      => __('gingerminds-cms::translation.blocks.cards.fields.cards'),
+                'required'   => false,
+                'default'    => [],
+                'add_label'  => __('gingerminds-cms::translation.blocks.cards.fields.add_card'),
+                'item_label' => __('gingerminds-cms::translation.blocks.cards.fields.card_item_label'),
+                'fields'     => [
                     [
                         'name'     => 'title',
                         'type'     => 'text',
                         'label'    => __('gingerminds-cms::translation.blocks.cards.fields.card_title'),
-                        'required' => true,
+                        'required' => false,
                         'size'     => 'md',
                     ],
                     [
@@ -80,7 +81,7 @@ class Cards extends AbstractBlock
                         'name'     => 'image',
                         'type'     => 'file',
                         'label'    => __('gingerminds-cms::translation.blocks.cards.fields.card_image'),
-                        'required' => false,
+                        'required' => true,
                         'size'     => 'md',
                     ],
                 ],
