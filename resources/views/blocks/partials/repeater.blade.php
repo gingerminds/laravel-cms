@@ -20,6 +20,7 @@
     $subFields    = $field['fields'] ?? [];
     $namePrefix   = "data[{$repeaterName}]";
     $idPrefix     = 'cms_block_field_' . $repeaterName;
+    $itemLabel    = $field['item_label'] ?? __('gingerminds-cms::translation.blocks.message.repeater_row_label');
 @endphp
 <div class="col-12">
     <label class="form-label">
@@ -34,6 +35,12 @@
          ever grows for the lifetime of this modal. --}}
     <div class="cms-repeater" data-cms-repeater data-repeater-name="{{ $repeaterName }}" data-next-index="{{ count($rows) }}">
         <div class="cms-repeater-rows" data-role="rows">
+            {{-- Every row starts collapsed here, including one just added
+                 by editing an existing block — repeater.js is what opens a
+                 *freshly added* row right after cloning it, so "closed by
+                 default when reopening the form, open by default when you
+                 add one" comes from client-side behavior, not from two
+                 different server-rendered states. --}}
             @foreach($rows as $index => $row)
                 @include('gingerminds-cms::blocks.partials.repeater-row', [
                     'subFields' => $subFields,
@@ -41,6 +48,7 @@
                     'index' => $index,
                     'namePrefix' => $namePrefix,
                     'idPrefix' => $idPrefix,
+                    'itemLabel' => $itemLabel,
                 ])
             @endforeach
         </div>
@@ -53,8 +61,9 @@
         {{-- Inert to the browser (a <template>'s content never renders or
              runs scripts) but still ordinary Blade-compiled HTML from
              this side — repeater.js clones it and replaces every
-             "__INDEX__" occurrence (name/id/aria/data-bs-target, all
-             derived from the same $index string) with a real one. --}}
+             "__INDEX__"/"__DISPLAY_INDEX__" occurrence (name/id/aria/
+             data-bs-target and the row's visible number, respectively) with
+             a real one. --}}
         <template data-role="row-template">
             @include('gingerminds-cms::blocks.partials.repeater-row', [
                 'subFields' => $subFields,
@@ -62,6 +71,7 @@
                 'index' => '__INDEX__',
                 'namePrefix' => $namePrefix,
                 'idPrefix' => $idPrefix,
+                'itemLabel' => $itemLabel,
             ])
         </template>
     </div>

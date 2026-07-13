@@ -84,6 +84,9 @@ return [
             'remove' => 'Remove this block',
             'copy_structure' => 'Copy structure',
             'copy' => 'Copy',
+            'add_repeater_row' => 'Add a row',
+            'remove_repeater_row' => 'Remove this row',
+            'reorder_repeater_row' => 'Drag to reorder',
         ],
         'message' => [
             'no_block' => 'No block type available.',
@@ -98,6 +101,7 @@ return [
             'copy_structure_confirm' => 'Do you want to duplicate this structure? This will delete your current structure.',
             'copy_structure_empty_source' => 'This language has no blocks yet.',
             'no_other_language' => 'No other language available.',
+            'repeater_row_label' => 'Item',
         ],
         'title_text' => [
             'label' => 'Title + Text',
@@ -128,6 +132,19 @@ return [
             'fields' => [
                 'title' => 'Title',
                 'file' => 'File',
+            ],
+        ],
+        'cards' => [
+            'label' => 'Cards',
+            'fields' => [
+                'title' => 'Title',
+                'text' => 'Text',
+                'cards' => 'Cards',
+                'add_card' => 'Add a card',
+                'card_item_label' => 'Card',
+                'card_title' => 'Title',
+                'card_description' => 'Description',
+                'card_image' => 'Image',
             ],
         ],
     ],

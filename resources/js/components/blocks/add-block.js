@@ -17,6 +17,7 @@ import { buildBlockItem, buildLoading, readBlockData, refreshInsertSlots, syncHi
 // cross-package import, which only resolves once both are published.
 import { initFileFields } from '../../../gingerminds-media-manager/components/dropzone.js';
 import { initMediaSelectFields } from '../../../gingerminds-media-manager/components/media-select.js';
+import { initRepeaterFields } from './repeater.js';
 
 let activeCanvas = null;
 let activeItem = null; // block being edited, null when adding a new one
@@ -41,23 +42,35 @@ let insertBeforeEl = null; // "add" slot clicked, or empty-state block — new i
 let relocatedModals = [];
 let suppressFormModalCleanup = false;
 
+function wireModalRelocation(modalEl) {
+    document.body.appendChild(modalEl);
+
+    modalEl.addEventListener('show.bs.modal', () => {
+        suppressFormModalCleanup = true;
+        Modal.getInstance(document.getElementById('cmsBlockFormModal'))?.hide();
+    });
+
+    modalEl.addEventListener('hidden.bs.modal', () => {
+        Modal.getOrCreateInstance(document.getElementById('cmsBlockFormModal')).show();
+        suppressFormModalCleanup = false;
+    });
+}
+
 function relocateNestedModals(container) {
     relocatedModals.forEach((el) => el.remove());
     relocatedModals = Array.from(container.querySelectorAll('.modal'));
+    relocatedModals.forEach(wireModalRelocation);
+}
 
-    relocatedModals.forEach((modalEl) => {
-        document.body.appendChild(modalEl);
-
-        modalEl.addEventListener('show.bs.modal', () => {
-            suppressFormModalCleanup = true;
-            Modal.getInstance(document.getElementById('cmsBlockFormModal'))?.hide();
-        });
-
-        modalEl.addEventListener('hidden.bs.modal', () => {
-            Modal.getOrCreateInstance(document.getElementById('cmsBlockFormModal')).show();
-            suppressFormModalCleanup = false;
-        });
-    });
+// A repeater row (see repeater.js) added *after* this initial scan — e.g. a
+// card's image dropzone modal — needs the exact same relocation/hide-show
+// treatment, and needs to join the same `relocatedModals` list so it gets
+// cleaned up whenever the form modal closes, same as every modal already
+// present when the form was first injected.
+export function relocateRepeaterRowModals(row) {
+    const modals = Array.from(row.querySelectorAll('.modal'));
+    relocatedModals.push(...modals);
+    modals.forEach(wireModalRelocation);
 }
 
 export function initAddBlockFlow() {
@@ -163,6 +176,7 @@ function openBlockForm(canvas, key, item) {
             initWysiwygFields(body);
             initMediaSelectFields(body);
             initFileFields(body);
+            initRepeaterFields(body);
         })
         .catch(() => {
             const alert = document.createElement('div');
@@ -256,12 +270,18 @@ function showFormErrors(container, errors) {
 
     Object.entries(errors).forEach(([key, messages]) => {
         const fieldName = key.replace(/^data\./, '');
+        // A repeater row's error key is dotted (data.cards.0.title) same as
+        // any other nested Laravel validation path, but its actual input
+        // name is bracketed (data[cards][0][title], see
+        // repeater-row.blade.php) — rebuild the bracketed form instead of
+        // assuming a single flat segment.
+        const name = 'data' + fieldName.split('.').map((part) => `[${part}]`).join('');
         // `file` (and `toggle`) fields render a hidden fallback input
         // sharing the same name as their real, visible control (see
         // form.blade.php) — querySelector() alone would always land on
         // whichever comes first in the DOM (the hidden one), so the error
         // would attach to an invisible element. Prefer a non-hidden match.
-        const candidates = Array.from(container.querySelectorAll(`[name="data[${fieldName}]"]`));
+        const candidates = Array.from(container.querySelectorAll(`[name="${name}"]`));
         const input = candidates.find((el) => el.type !== 'hidden') ?? candidates[0] ?? null;
         const message = Array.isArray(messages) ? messages[0] : messages;
 

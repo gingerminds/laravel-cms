@@ -25,11 +25,51 @@ export function initRepeaterFields(scope = document) {
                 return;
             }
 
+            // Checked before the header toggle below: the remove button
+            // lives *inside* the header (repeater-row.blade.php), so a
+            // click on it would otherwise also toggle the row it just
+            // deleted the DOM node of.
             const removeBtn = event.target.closest('[data-role="remove-row"]');
             if (removeBtn) {
                 removeBtn.closest('[data-role="row"]')?.remove();
+                return;
+            }
+
+            // Same reasoning as the remove button: the drag handle also
+            // lives inside the header, and Sortable.js only constrains
+            // where a *drag* can start from — a plain click still bubbles
+            // here and would otherwise toggle the row it's meant to just
+            // grab.
+            if (event.target.closest('[data-role="drag-handle"]')) {
+                return;
+            }
+
+            const toggle = event.target.closest('[data-role="toggle"]');
+            if (toggle) {
+                toggle.closest('[data-role="row"]')?.classList.toggle('is-collapsed');
             }
         });
+
+        initRowSorting(repeater);
+    });
+}
+
+// Reordering, same convention as the page-level block canvas
+// (content-blocks.js): `window.Sortable` used as a global (npm dependency,
+// loaded via a plain <script> tag, never ES-imported), guarded in case it
+// isn't present. No onEnd bookkeeping needed here unlike the canvas: a
+// repeater has no hidden JSON input to keep in sync and no insert-slots to
+// refresh — rows just submit in whatever DOM order they end up in, and the
+// server-side reindex (see repeater-row.blade.php's docblock) already
+// turns that into the right saved order.
+function initRowSorting(repeater) {
+    const rowsContainer = repeater.querySelector(':scope > [data-role="rows"]');
+    if (!window.Sortable || !rowsContainer) return;
+
+    new Sortable(rowsContainer, {
+        animation: 150,
+        handle: '[data-role="drag-handle"]',
+        ghostClass: 'sortable-ghost',
     });
 }
 
@@ -47,17 +87,27 @@ function addRow(repeater) {
     repeater.dataset.nextIndex = String(index + 1);
 
     // Serialize -> string-replace -> reparse: simplest reliable way to
-    // replace every "__INDEX__" occurrence (it appears inside several
-    // attributes derived from the same name/id string — see
-    // repeater-row.blade.php) across an entire cloned fragment at once.
+    // replace every "__INDEX__"/"__DISPLAY_INDEX__" occurrence (they appear
+    // inside several attributes derived from the same name/id string, plus
+    // the row's visible number — see repeater-row.blade.php) across an
+    // entire cloned fragment at once.
     const container = document.createElement('div');
     container.appendChild(template.content.cloneNode(true));
-    container.innerHTML = container.innerHTML.split('__INDEX__').join(String(index));
+    container.innerHTML = container.innerHTML
+        .split('__INDEX__').join(String(index))
+        .split('__DISPLAY_INDEX__').join(String(index + 1));
 
     const row = container.firstElementChild;
     if (!row) return;
 
     rowsContainer.appendChild(row);
+
+    // Rows render collapsed by default (repeater-row.blade.php) so
+    // reopening a block with several existing cards doesn't dump a wall of
+    // fields on the contributor — a card just added is the one exception,
+    // expanded immediately since there's nothing to skim yet and it's what
+    // the contributor is about to fill in.
+    row.classList.remove('is-collapsed');
 
     initWysiwygFields(row);
     initMediaSelectFields(row);

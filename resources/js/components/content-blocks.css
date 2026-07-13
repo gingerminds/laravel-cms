@@ -72,3 +72,87 @@
 .cms-block-insert-slot .cms-block-add {
     border-radius: 2rem;
 }
+
+/* Repeater fields (see docs/Blocks.md, partials/repeater*.blade.php) — a
+   card's own form is collapsible so a block with several of them doesn't
+   dump every field of every row on the contributor at once. */
+.cms-repeater-row {
+    border: 1px solid rgba(0, 0, 0, .1);
+    border-radius: .5rem;
+    margin-bottom: .75rem;
+    overflow: hidden;
+}
+
+.cms-repeater-row-header {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .5rem .75rem;
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+    background: rgba(0, 0, 0, .015);
+}
+
+.cms-repeater-row-header:hover {
+    background: rgba(0, 0, 0, .03);
+}
+
+/* Same look as .cms-block-item-toolbar .drag-handle above, repeated here
+   since that rule is scoped to the block toolbar and not reachable from
+   inside a repeater row. */
+.cms-repeater-row-drag-handle {
+    display: inline-flex;
+    align-items: center;
+    color: var(--bs-secondary-color);
+    cursor: grab;
+}
+
+.cms-repeater-row.sortable-ghost {
+    opacity: .4;
+}
+
+.cms-repeater-row-title {
+    flex-grow: 1;
+    font-weight: 500;
+}
+
+.cms-repeater-row-chevron {
+    transition: transform .15s ease;
+    transform: rotate(90deg);
+    color: var(--bs-secondary-color);
+}
+
+.cms-repeater-row.is-collapsed .cms-repeater-row-chevron {
+    transform: rotate(0deg);
+}
+
+.cms-repeater-row-body {
+    padding: 1rem .75rem;
+    border-top: 1px solid rgba(0, 0, 0, .1);
+}
+
+.cms-repeater-row.is-collapsed .cms-repeater-row-body {
+    display: none;
+}
+
+/* Same visual language as .cms-block-item-toolbar .btn-icon above (icon
+   only, transparent background, rounded hover state) — not reusing that
+   selector directly since it's scoped to the block toolbar specifically. */
+.cms-repeater-row-remove {
+    width: 1.6rem;
+    height: 1.6rem;
+    font-size: .875rem;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: .5rem;
+    background: transparent;
+    color: var(--bs-danger);
+}
+
+.cms-repeater-row-remove:hover {
+    background: rgba(var(--bs-danger-rgb), .1);
+}

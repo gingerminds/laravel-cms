@@ -84,6 +84,9 @@ return [
             'remove' => 'Supprimer ce bloc',
             'copy_structure' => 'Copier la structure',
             'copy' => 'Copier',
+            'add_repeater_row' => 'Ajouter une ligne',
+            'remove_repeater_row' => 'Supprimer cette ligne',
+            'reorder_repeater_row' => 'Glisser pour réordonner',
         ],
         'message' => [
             'no_block' => 'Aucun type de bloc disponible.',
@@ -98,6 +101,7 @@ return [
             'copy_structure_confirm' => 'Voulez-vous dupliquer cette structure ? Cela va supprimer votre structure actuelle.',
             'copy_structure_empty_source' => 'Cette langue n\'a pas encore de blocs.',
             'no_other_language' => 'Aucune autre langue disponible.',
+            'repeater_row_label' => 'Élément',
         ],
         'title_text' => [
             'label' => 'Titre + Texte',
@@ -128,6 +132,19 @@ return [
             'fields' => [
                 'title' => 'Titre',
                 'file' => 'Fichier',
+            ],
+        ],
+        'cards' => [
+            'label' => 'Cartes',
+            'fields' => [
+                'title' => 'Titre',
+                'text' => 'Texte',
+                'cards' => 'Cartes',
+                'add_card' => 'Ajouter une carte',
+                'card_item_label' => 'Carte',
+                'card_title' => 'Titre',
+                'card_description' => 'Description',
+                'card_image' => 'Image',
             ],
         ],
     ],
