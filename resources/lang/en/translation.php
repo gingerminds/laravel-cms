@@ -106,5 +106,29 @@ return [
                 'text' => 'Text',
             ],
         ],
+        'text_image' => [
+            'label' => 'Text + Image',
+            'fields' => [
+                'title' => 'Title',
+                'text' => 'Text',
+                'image' => 'Image',
+                'image_position' => 'Image position (Left/Right)',
+                'image_position_helper' => 'Off: image on the left — On: image on the right',
+            ],
+        ],
+        'video' => [
+            'label' => 'Video',
+            'fields' => [
+                'title' => 'Title',
+                'embed_code' => 'Code Embed',
+            ],
+        ],
+        'media' => [
+            'label' => 'Media (standalone)',
+            'fields' => [
+                'title' => 'Title',
+                'file' => 'File',
+            ],
+        ],
     ],
 ];

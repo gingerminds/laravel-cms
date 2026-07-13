@@ -106,5 +106,29 @@ return [
                 'text' => 'Texte',
             ],
         ],
+        'text_image' => [
+            'label' => 'Texte + Image',
+            'fields' => [
+                'title' => 'Titre',
+                'text' => 'Texte',
+                'image' => 'Image',
+                'image_position' => 'Position de l\'image (Gauche/Droite)',
+                'image_position_helper' => 'Désactivé : image à gauche — Activé : image à droite',
+            ],
+        ],
+        'video' => [
+            'label' => 'Video',
+            'fields' => [
+                'title' => 'Titre',
+                'embed_code' => 'Code Embed',
+            ],
+        ],
+        'media' => [
+            'label' => 'Média (seul)',
+            'fields' => [
+                'title' => 'Titre',
+                'file' => 'Fichier',
+            ],
+        ],
     ],
 ];
