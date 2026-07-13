@@ -2,6 +2,7 @@
 
 namespace Gingerminds\LaravelCms\Http\Controllers\Page;
 
+use Gingerminds\LaravelCms\Blocks\BlockFileFieldSync;
 use Gingerminds\LaravelCms\Http\Request\Page\PageRequest;
 use Gingerminds\LaravelCms\Models\Page\Page;
 use Gingerminds\LaravelCms\Models\Page\PageTranslation;
@@ -15,6 +16,7 @@ use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 
 class PageController extends AbstractController
 {
@@ -123,6 +125,18 @@ class PageController extends AbstractController
     public function destroy(Page $page): RedirectResponse
     {
         $this->authorize('delete', $page);
+
+        // Each translation's content blocks may reference exclusive `file`
+        // type fields (see BlockFileFieldSync) — with the whole page going
+        // away, nothing keeps referencing them, so prune every one of them
+        // rather than leaving them orphaned on disk.
+        /** @var Collection<int, PageTranslation> $translations */
+        $translations = $page->translations;
+
+        foreach ($translations as $translation) {
+            BlockFileFieldSync::pruneOrphanedFiles($translation->content, []);
+        }
+
         $page->delete();
 
         /** @var PageTranslation|null $translation */

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gingerminds\LaravelCms\Repositories\Page;
 
+use Gingerminds\LaravelCms\Blocks\BlockFileFieldSync;
 use Gingerminds\LaravelCms\Models\Page\Page;
 use Gingerminds\LaravelCms\Models\Page\PageTranslation;
 use Gingerminds\LaravelCms\Models\Page\PageUrl;
@@ -215,6 +216,17 @@ class PageRepository extends AbstractRepository implements RepositoryInterface
                     $fields
                 );
             }
+
+            // A content block's own `file` type field (see BlockFileFieldSync)
+            // is exclusive to that block, unlike `main_visual`/`thumbnail`
+            // above — nothing else references it, so once it drops out of
+            // the submitted `content` array (block removed, or its file
+            // replaced/cleared), it's safe to delete outright rather than
+            // just dissociate.
+            BlockFileFieldSync::pruneOrphanedFiles(
+                $translation?->content,
+                $fields['content'] ?? []
+            );
 
             $fields['site_id'] = $page->site_id;
 

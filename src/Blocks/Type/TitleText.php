@@ -29,7 +29,7 @@ class TitleText extends AbstractBlock
 
     public function order(): int
     {
-        return 10;
+        return 0;
     }
 
     public function fields(): array

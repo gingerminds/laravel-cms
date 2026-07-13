@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Gingerminds\LaravelCms\Blocks;
 
+use Closure;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\Rule;
 
 /**
@@ -22,20 +24,96 @@ class BlockFieldValidator
     public static function rulesForField(array $field): array
     {
         $required = (bool) ($field['required'] ?? false);
-        $rules    = [$required ? 'required' : 'nullable'];
+        $type     = $field['type'] ?? 'text';
 
-        $type = $field['type'] ?? 'text';
+        if ($type === 'file') {
+            return self::fileRules($field, $required);
+        }
 
-        $rules[] = match ($type) {
-            'select' => 'string',
-            default  => 'string',
+        $rules           = [$required ? 'required' : 'nullable'];
+        $isMultipleMedia = $type === 'media' && (bool) ($field['multiple'] ?? false);
+
+        $rules[] = match (true) {
+            $type === 'select' => 'string',
+            $type === 'toggle' => 'boolean',
+            $isMultipleMedia   => 'array',
+            $type === 'media'  => 'integer',
+            default            => 'string',
         };
 
         if ($type === 'select' && !empty($field['options'])) {
             $rules[] = Rule::in(array_keys($field['options']));
         }
 
+        // The `.*` companion rule for a multiple-media field is added by
+        // `rulesForBlock()` instead (needs its own top-level rule key).
+        if ($type === 'media' && !$isMultipleMedia) {
+            $rules[] = Rule::exists('medias', 'id');
+        }
+
         return array_merge($rules, $field['rules'] ?? []);
+    }
+
+    /**
+     * @param array<string, mixed> $field
+     * @return array<int, mixed>
+     */
+    private static function fileRules(array $field, bool $required): array
+    {
+        $maxKb = (int) ($field['max_size_kb'] ?? 5120);
+        $mimes = array_key_exists('mimes', $field) ? $field['mimes'] : ['image/*'];
+        $mimes = empty($mimes) ? null : (array) $mimes;
+
+        $rules   = [$required ? 'required' : 'nullable'];
+        $rules[] = static function (string $attribute, mixed $value, Closure $fail) use ($maxKb, $mimes): void {
+            if ($value === null || $value === '' || is_string($value)) {
+                return;
+            }
+
+            if (!$value instanceof UploadedFile) {
+                $fail('The :attribute must be a file.');
+                return;
+            }
+
+            if (!$value->isValid()) {
+                $fail('The :attribute failed to upload.');
+                return;
+            }
+
+            if ($mimes !== null && !self::mimeMatches((string) $value->getMimeType(), $mimes)) {
+                $fail('The :attribute must be a file of type: ' . implode(', ', $mimes) . '.');
+                return;
+            }
+
+            if ($value->getSize() > $maxKb * 1024) {
+                $fail("The :attribute must not be greater than {$maxKb} kilobytes.");
+            }
+        };
+
+        return array_merge($rules, $field['rules'] ?? []);
+    }
+
+    /**
+     * Matches a mime type against a list of patterns supporting a trailing
+     * wildcard (`image/*`) as well as exact matches (`application/pdf`) —
+     * same syntax as the HTML `accept` attribute, so a field's `mimes`
+     * schema value can double as its `accept` hint (see `form.blade.php`).
+     *
+     * @param array<int, string> $patterns
+     */
+    private static function mimeMatches(string $mimeType, array $patterns): bool
+    {
+        foreach ($patterns as $pattern) {
+            if ($pattern === $mimeType) {
+                return true;
+            }
+
+            if (str_ends_with($pattern, '/*') && str_starts_with($mimeType, substr($pattern, 0, -1))) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -47,9 +125,33 @@ class BlockFieldValidator
 
         foreach ($block->fields() as $field) {
             $rules[$prefix . '.' . $field['name']] = self::rulesForField($field);
+
+            if (($field['type'] ?? null) === 'media' && ($field['multiple'] ?? false)) {
+                $rules[$prefix . '.' . $field['name'] . '.*'] = ['integer', Rule::exists('medias', 'id')];
+            }
         }
 
         return $rules;
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     * @return array<string, mixed>
+     */
+    public static function sanitizeDataForBlock(BlockInterface $block, array $data): array
+    {
+        foreach ($block->fields() as $field) {
+            $name = $field['name'];
+            $type = $field['type'] ?? null;
+
+            $isUnsetSingleMedia = $type === 'media' && !($field['multiple'] ?? false);
+
+            if (($isUnsetSingleMedia || $type === 'file') && ($data[$name] ?? null) === '') {
+                $data[$name] = null;
+            }
+        }
+
+        return $data;
     }
 
     /**

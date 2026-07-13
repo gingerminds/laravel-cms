@@ -72,7 +72,10 @@ class ContentFieldSupport
 
             $allowedKeys = array_column($block->fields(), 'name');
 
-            $blocks[$index]['data'] = array_intersect_key($item['data'], array_flip($allowedKeys));
+            $blocks[$index]['data'] = BlockFieldValidator::sanitizeDataForBlock(
+                $block,
+                array_intersect_key($item['data'], array_flip($allowedKeys))
+            );
         }
 
         return $blocks;

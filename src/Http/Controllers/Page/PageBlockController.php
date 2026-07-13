@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gingerminds\LaravelCms\Http\Controllers\Page;
 
 use Gingerminds\LaravelCms\Blocks\BlockFieldValidator;
+use Gingerminds\LaravelCms\Blocks\BlockFileFieldSync;
 use Gingerminds\LaravelCms\Blocks\BlockRequestSupport;
 use Gingerminds\LaravelCms\Resolver\ResourceResolver;
 use Gingerminds\LaravelCore\Http\Controllers\AbstractController;
@@ -64,18 +65,22 @@ class PageBlockController extends AbstractController
 
         $block = BlockRequestSupport::resolveOrAbort($key);
 
+        $requestData         = $request->all();
+        $requestData['data'] = BlockFieldValidator::sanitizeDataForBlock($block, $requestData['data'] ?? []);
+
         // Validator::make(...) rather than $request->validate(...): the
         // latter has no way to pass custom attribute names, and without
         // them a failed "title" rule reads "The data.title field is
         // required." instead of "The Title field is required.".
         $validated = Validator::make(
-            $request->all(),
+            $requestData,
             BlockFieldValidator::rulesForBlock($block),
             [],
             BlockFieldValidator::attributesForBlock($block)
         )->validate();
 
         $data = array_merge(BlockFieldValidator::defaultsForBlock($block), $validated['data'] ?? []);
+        $data = BlockFileFieldSync::sync($block, $request, $data);
         $uid  = BlockRequestSupport::resolveUid($request);
 
         $preview = BlockRequestSupport::renderView($block->previewView(), $block, $uid, $data);
