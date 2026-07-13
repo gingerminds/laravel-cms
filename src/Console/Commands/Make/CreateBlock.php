@@ -39,7 +39,8 @@ class CreateBlock extends Command
 
     public function handle(): int
     {
-        $raw = trim((string) $this->argument('name'));
+        $name = $this->argument('name');
+        $raw  = trim(is_string($name) ? $name : '');
 
         if ($raw === '') {
             $this->error('Name is required.');
