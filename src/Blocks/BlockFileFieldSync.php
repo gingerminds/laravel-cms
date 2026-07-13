@@ -19,19 +19,56 @@ class BlockFileFieldSync
      */
     public static function sync(BlockInterface $block, Request $request, array $data): array
     {
-        $uploadService = app(FileUploadService::class);
+        return self::syncFields($block->fields(), $request, $data, 'data', app(FileUploadService::class));
+    }
 
-        foreach ($block->fields() as $field) {
-            if (($field['type'] ?? null) !== 'file') {
+    /**
+     * @param array<int, array<string, mixed>> $fields
+     * @param array<string, mixed> $data
+     * @return array<string, mixed>
+     */
+    private static function syncFields(
+        array $fields,
+        Request $request,
+        array $data,
+        string $prefix,
+        FileUploadService $uploadService,
+    ): array {
+        foreach ($fields as $field) {
+            $name = $field['name'];
+            $type = $field['type'] ?? null;
+
+            if ($type === 'repeater') {
+                $rows = is_array($data[$name] ?? null) ? $data[$name] : [];
+
+                foreach ($rows as $index => $row) {
+                    if (!is_array($row)) {
+                        continue;
+                    }
+
+                    $rows[$index] = self::syncFields(
+                        $field['fields'] ?? [],
+                        $request,
+                        $row,
+                        "$prefix.$name.$index",
+                        $uploadService,
+                    );
+                }
+
+                $data[$name] = $rows;
                 continue;
             }
 
-            $name = $field['name'];
+            if ($type !== 'file') {
+                continue;
+            }
+
+            $inputKey = "$prefix.$name";
 
             /** @var UploadedFile|null $uploaded */
-            $uploaded = $request->file("data.$name");
+            $uploaded = $request->file($inputKey);
 
-            $oldId = $request->input("data.$name");
+            $oldId = $request->input($inputKey);
             $old   = is_string($oldId) && $oldId !== '' ? File::query()->find($oldId) : null;
 
             if ($uploaded instanceof UploadedFile) {
@@ -40,7 +77,7 @@ class BlockFileFieldSync
                 continue;
             }
 
-            if ($request->boolean("data.{$name}_remove")) {
+            if ($request->boolean("{$inputKey}_remove")) {
                 $uploadService->delete($old);
                 $data[$name] = null;
 
@@ -98,19 +135,48 @@ class BlockFileFieldSync
                 continue;
             }
 
-            foreach ($block->fields() as $field) {
-                if (($field['type'] ?? null) !== 'file') {
-                    continue;
-                }
+            array_push($ids, ...self::collectFieldFileIds($block->fields(), $item['data']));
+        }
 
-                $value = $item['data'][$field['name']] ?? null;
+        return array_values(array_unique($ids));
+    }
+
+    /**
+     * Recurses one level into `repeater` rows — same reasoning as
+     * `syncFields()`: a card's `image` is a `file` field like any other,
+     * just nested under its row's own `data`.
+     *
+     * @param array<int, array<string, mixed>> $fields
+     * @param array<string, mixed> $data
+     * @return list<string>
+     */
+    private static function collectFieldFileIds(array $fields, array $data): array
+    {
+        $ids = [];
+
+        foreach ($fields as $field) {
+            $name = $field['name'];
+            $type = $field['type'] ?? null;
+
+            if ($type === 'file') {
+                $value = $data[$name] ?? null;
 
                 if (is_string($value) && $value !== '') {
                     $ids[] = $value;
                 }
+
+                continue;
+            }
+
+            if ($type === 'repeater' && is_array($data[$name] ?? null)) {
+                foreach ($data[$name] as $row) {
+                    if (is_array($row)) {
+                        array_push($ids, ...self::collectFieldFileIds($field['fields'] ?? [], $row));
+                    }
+                }
             }
         }
 
-        return array_values(array_unique($ids));
+        return $ids;
     }
 }

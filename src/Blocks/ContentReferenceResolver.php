@@ -38,24 +38,51 @@ class ContentReferenceResolver
                 continue;
             }
 
-            foreach ($block->fields() as $field) {
-                $type = $field['type'] ?? null;
-                $name = $field['name'];
-
-                if (!isset($resolvers[$type]) || !array_key_exists($name, $item['data'])) {
-                    continue;
-                }
-
-                $blocks[$index]['data'][$name] = self::resolveFieldValue(
-                    $resolvers[$type],
-                    $loaded[$type],
-                    $item['data'][$name],
-                    (bool) ($field['multiple'] ?? false),
-                );
-            }
+            $blocks[$index]['data'] = self::resolveFields($block->fields(), $item['data'], $resolvers, $loaded);
         }
 
         return $blocks;
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $fields
+     * @param array<string, mixed> $data
+     * @param array<string, ReferenceFieldResolver> $resolvers
+     * @param array<string, array<int|string, mixed>> $loaded
+     * @return array<string, mixed>
+     */
+    private static function resolveFields(array $fields, array $data, array $resolvers, array $loaded): array
+    {
+        foreach ($fields as $field) {
+            $type = $field['type'] ?? null;
+            $name = $field['name'];
+
+            if ($type === 'repeater') {
+                $rows = is_array($data[$name] ?? null) ? $data[$name] : [];
+
+                $data[$name] = array_map(
+                    static fn (mixed $row): mixed => is_array($row)
+                        ? self::resolveFields($field['fields'] ?? [], $row, $resolvers, $loaded)
+                        : $row,
+                    $rows,
+                );
+
+                continue;
+            }
+
+            if (!isset($resolvers[$type]) || !array_key_exists($name, $data)) {
+                continue;
+            }
+
+            $data[$name] = self::resolveFieldValue(
+                $resolvers[$type],
+                $loaded[$type],
+                $data[$name],
+                (bool) ($field['multiple'] ?? false),
+            );
+        }
+
+        return $data;
     }
 
     /**
@@ -96,9 +123,9 @@ class ContentReferenceResolver
 
     /**
      * Every id a given reference field `type` holds across the whole page,
-     * deduplicated — regardless of which block or which field declares it,
-     * so `loadMany()` runs once per type no matter how many blocks/fields
-     * reference that same type.
+     * deduplicated — regardless of which block, field, or repeater row
+     * declares it, so `loadMany()` runs once per type no matter how many
+     * places reference that same type.
      *
      * @param array<int, array<string, mixed>> $blocks
      * @return array<int, int|string>
@@ -114,27 +141,53 @@ class ContentReferenceResolver
                 continue;
             }
 
-            foreach ($block->fields() as $field) {
-                if (($field['type'] ?? null) !== $fieldType) {
-                    continue;
-                }
-
-                $value = $item['data'][$field['name']] ?? null;
-
-                if ($field['multiple'] ?? false) {
-                    array_push($ids, ...array_filter(
-                        (array) $value,
-                        static fn (mixed $id): bool => $id !== null && $id !== '',
-                    ));
-                    continue;
-                }
-
-                if ($value !== null && $value !== '') {
-                    $ids[] = $value;
-                }
-            }
+            array_push($ids, ...self::collectFieldIds($block->fields(), $item['data'], $fieldType));
         }
 
         return array_values(array_unique($ids));
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $fields
+     * @param array<string, mixed> $data
+     * @return array<int, int|string>
+     */
+    private static function collectFieldIds(array $fields, array $data, string $fieldType): array
+    {
+        $ids = [];
+
+        foreach ($fields as $field) {
+            $type = $field['type'] ?? null;
+
+            if ($type === 'repeater') {
+                foreach ((array) ($data[$field['name']] ?? []) as $row) {
+                    if (is_array($row)) {
+                        array_push($ids, ...self::collectFieldIds($field['fields'] ?? [], $row, $fieldType));
+                    }
+                }
+
+                continue;
+            }
+
+            if ($type !== $fieldType) {
+                continue;
+            }
+
+            $value = $data[$field['name']] ?? null;
+
+            if ($field['multiple'] ?? false) {
+                array_push($ids, ...array_filter(
+                    (array) $value,
+                    static fn (mixed $id): bool => $id !== null && $id !== '',
+                ));
+                continue;
+            }
+
+            if ($value !== null && $value !== '') {
+                $ids[] = $value;
+            }
+        }
+
+        return $ids;
     }
 }

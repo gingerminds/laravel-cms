@@ -30,6 +30,14 @@ class BlockFieldValidator
             return self::fileRules($field, $required);
         }
 
+        if ($type === 'repeater') {
+            // Per-row rules (`{prefix}.{name}.*.{subField}`) are added by
+            // `rulesForBlock()` instead — this only covers the top-level
+            // key itself, same split already used for a multiple-media
+            // field's own `.*` companion rule.
+            return [$required ? 'required' : 'nullable', 'array'];
+        }
+
         $rules           = [$required ? 'required' : 'nullable'];
         $isMultipleMedia = $type === 'media' && (bool) ($field['multiple'] ?? false);
 
@@ -129,6 +137,17 @@ class BlockFieldValidator
             if (($field['type'] ?? null) === 'media' && ($field['multiple'] ?? false)) {
                 $rules[$prefix . '.' . $field['name'] . '.*'] = ['integer', Rule::exists('medias', 'id')];
             }
+
+            // One level of nesting only: a repeater row's own sub-fields
+            // are validated via Laravel's `.*` wildcard expansion (applies
+            // to however many rows were actually submitted, regardless of
+            // their index values) — a sub-field being itself a `repeater`
+            // isn't supported.
+            if (($field['type'] ?? null) === 'repeater') {
+                foreach ($field['fields'] ?? [] as $subField) {
+                    $rules[$prefix . '.' . $field['name'] . '.*.' . $subField['name']] = self::rulesForField($subField);
+                }
+            }
         }
 
         return $rules;
@@ -149,9 +168,44 @@ class BlockFieldValidator
             if (($isUnsetSingleMedia || $type === 'file') && ($data[$name] ?? null) === '') {
                 $data[$name] = null;
             }
+
+            if ($type === 'repeater' && is_array($data[$name] ?? null)) {
+                $data[$name] = self::sanitizeRepeaterRows($field['fields'] ?? [], $data[$name]);
+            }
         }
 
         return $data;
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $subFields
+     * @param array<int|string, mixed> $rows
+     * @return array<int, array<string, mixed>>
+     */
+    private static function sanitizeRepeaterRows(array $subFields, array $rows): array
+    {
+        $sanitized = [];
+
+        foreach ($rows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
+            foreach ($subFields as $subField) {
+                $subName = $subField['name'];
+                $subType = $subField['type'] ?? null;
+
+                $isUnsetSingleMedia = $subType === 'media' && !($subField['multiple'] ?? false);
+
+                if (($isUnsetSingleMedia || $subType === 'file') && ($row[$subName] ?? null) === '') {
+                    $row[$subName] = null;
+                }
+            }
+
+            $sanitized[] = $row;
+        }
+
+        return $sanitized;
     }
 
     /**
@@ -168,6 +222,18 @@ class BlockFieldValidator
 
         foreach ($block->fields() as $field) {
             $attributes[$prefix . '.' . $field['name']] = $field['label'] ?? $field['name'];
+
+            // Registered with the literal `*` segment, not a concrete row
+            // index: Laravel's validator already resolves a wildcard-style
+            // custom attribute (`data.cards.*.title`) against any concrete
+            // error key matching that shape (`data.cards.0.title`,
+            // `data.cards.1.title`...), same mechanism relied on for rules.
+            if (($field['type'] ?? null) === 'repeater') {
+                foreach ($field['fields'] ?? [] as $subField) {
+                    $attributes[$prefix . '.' . $field['name'] . '.*.' . $subField['name']]
+                        = $subField['label'] ?? $subField['name'];
+                }
+            }
         }
 
         return $attributes;
