@@ -16,7 +16,7 @@
     "require": {
         "php": "^8.4",
         "gingerminds/laravel-core": "^3.0",
-        "gingerminds/laravel-media-manager": "^6.0",
+        "gingerminds/laravel-media-manager": "^6.0 || dev-develop",
         "gingerminds/laravel-multisite": "^2.3"
     },
     "repositories": [],
