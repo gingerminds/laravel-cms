@@ -157,5 +157,17 @@ return [
                 'slide_image' => 'Image',
             ],
         ],
+        'link_list' => [
+            'label' => 'Liste de liens',
+            'fields' => [
+                'title' => 'Titre',
+                'links' => 'Liens',
+                'add_link' => 'Ajouter un lien',
+                'link_item_label' => 'Lien',
+                'link_label' => 'Libellé',
+                'link_url' => 'URL',
+                'link_image' => 'Image (2 Mo max)',
+            ],
+        ],
     ],
 ];
