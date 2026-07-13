@@ -86,7 +86,10 @@ class CreateBlock extends Command
         $this->info("Block created: {$classPath}");
         $this->info("Preview view created: {$previewPath}");
         $this->line('');
-        $this->line("Next: edit fields() in {$class}.php — it'll show up in the block picker on its own, no registration needed.");
+        $this->line(
+            "Next: edit fields() in {$class}.php 
+        — it'll show up in the block picker on its own, no registration needed."
+        );
 
         return Command::SUCCESS;
     }

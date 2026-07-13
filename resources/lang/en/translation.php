@@ -147,5 +147,15 @@ return [
                 'card_image' => 'Image',
             ],
         ],
+        'slider' => [
+            'label' => 'Slider',
+            'fields' => [
+                'title' => 'Title',
+                'slides' => 'Slides',
+                'add_slide' => 'Add an image',
+                'slide_item_label' => 'Slide',
+                'slide_image' => 'Image',
+            ],
+        ],
     ],
 ];
