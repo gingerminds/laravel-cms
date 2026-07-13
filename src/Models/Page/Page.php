@@ -8,6 +8,7 @@ use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Link;
 use Gingerminds\LaravelCms\ApiProvider\Page\PageProvider;
+use Gingerminds\LaravelCms\Blocks\ContentReferenceResolver;
 use Gingerminds\LaravelCms\Models\PageCategory\PageCategory;
 use Gingerminds\LaravelCms\State\Page\StatusState;
 use Gingerminds\LaravelCore\Models\FilterableModelInterface;
@@ -210,6 +211,13 @@ class Page extends Model implements ResourceModelInterface, FilterableModelInter
     }
 
     /**
+     * `file`/`media` type block fields only store a bare id in the raw
+     * `PageTranslation::content` — resolved here into a richer object (url,
+     * mime type, thumbnail...) before being served by the API, sparing the
+     * headless frontend an extra round-trip per referenced file (see
+     * `ContentReferenceResolver`, docs/ContentBlocks.md "Exposition API").
+     * The DB-stored value itself is untouched, only this accessor's output.
+     *
      * @return array<int, array<string, mixed>>|null
      */
     public function getContentAttribute(): ?array
@@ -217,7 +225,7 @@ class Page extends Model implements ResourceModelInterface, FilterableModelInter
         /** @var PageTranslation|null $translation */
         $translation = $this->currentTranslation;
 
-        return $translation?->content;
+        return ContentReferenceResolver::resolve($translation?->content);
     }
 
     /**

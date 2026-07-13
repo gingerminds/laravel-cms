@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Gingerminds\LaravelCms\ApiProvider\Page\PageProvider;
+use Gingerminds\LaravelCms\Blocks\Reference\FileReferenceResolver;
+use Gingerminds\LaravelCms\Blocks\Reference\MediaReferenceResolver;
 use Gingerminds\LaravelCms\Http\Controllers\Menu\MenuController;
 use Gingerminds\LaravelCms\Http\Controllers\Menu\MenuItemController;
 use Gingerminds\LaravelCms\Http\Controllers\Page\PageController;
@@ -100,4 +102,14 @@ return [
 
     // Catalog sort weight override, without subclassing: 'title_text' => 5.
     'block_order' => [],
+
+    // Reference field resolvers (ContentReferenceResolver, docs/Blocks.md
+    // "API"): field `type` => FQCN implementing `ReferenceFieldResolver`.
+    // Merged additively like `block_paths` above — a project adds its own
+    // reference field type (e.g. a field pointing to one of its own
+    // models) without losing `file`/`media`.
+    'reference_resolvers' => [
+        'file'  => FileReferenceResolver::class,
+        'media' => MediaReferenceResolver::class,
+    ],
 ];

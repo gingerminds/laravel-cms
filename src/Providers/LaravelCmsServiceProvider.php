@@ -47,6 +47,7 @@ class LaravelCmsServiceProvider extends ServiceProvider
 
         $this->mergeAdditiveArrayConfig('disabled_blocks');
         $this->mergeAdditiveArrayConfig('block_paths', 'path');
+        $this->mergeAdditiveArrayConfig('reference_resolvers', associative: true);
 
         $this->bindResources();
 
@@ -251,8 +252,17 @@ class LaravelCmsServiceProvider extends ServiceProvider
      * docs/Blocks.md). Re-merges one array key on top of that, combining
      * the package's own default entries with whatever the project's
      * published config now holds — additive, not "either/or".
+     *
+     * Three shapes are supported, one per existing config key: a flat list
+     * of scalars deduplicated as a set (`disabled_blocks`), a list of
+     * assoc arrays deduplicated by one of their columns (`block_paths`,
+     * `$uniqueBy: 'path'`), and a plain keyed map where a published key
+     * simply overrides the package's default for that key
+     * (`reference_resolvers`, `$associative: true` — `array_merge()`
+     * already does exactly that, no dedup/reindex needed/wanted since string
+     * keys aren't reindexed by it).
      */
-    private function mergeAdditiveArrayConfig(string $key, ?string $uniqueBy = null): void
+    private function mergeAdditiveArrayConfig(string $key, ?string $uniqueBy = null, bool $associative = false): void
     {
         $packageDefaults = require __DIR__ . '/../../config/gingerminds-cms.php';
         $default         = $packageDefaults[$key] ?? [];
@@ -260,7 +270,10 @@ class LaravelCmsServiceProvider extends ServiceProvider
 
         $merged = array_merge($default, $published);
 
-        if ($uniqueBy !== null) {
+        if ($associative) {
+            // Nothing further to do: array_merge() above already keeps
+            // string keys and lets $published win on collision.
+        } elseif ($uniqueBy !== null) {
             // array_column()'s result is already a re-indexed list when no
             // $index_key is given (the inner call here) — wrapping it in
             // array_values() again would be a no-op.
