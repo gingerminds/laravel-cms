@@ -57,6 +57,9 @@ class PageRepository extends AbstractRepository implements RepositoryInterface
         $siteId         = app(SiteContext::class)->site()?->id;
         $languageIds    = $this->resolveLanguagePreference();
 
+        /** @var class-string<Page> $modelClass */
+        $modelClass = $this->getModelClass();
+
         foreach ([] !== $languageIds ? $languageIds : [null] as $languageId) {
             /** @var PageUrl|null $pageUrl */
             $pageUrl = PageUrl::query()
@@ -64,11 +67,22 @@ class PageRepository extends AbstractRepository implements RepositoryInterface
                 ->where('path', $normalizedPath)
                 ->when($languageId, fn (Builder $query) => $query->where('language_id', $languageId))
                 ->whereHas('page', fn (Builder $query) => $query->where('status', Published::class))
-                ->with('page')
                 ->first();
 
             if (null !== $pageUrl) {
-                return $pageUrl->page;
+                // Not `$pageUrl->page`: that relation is declared on
+                // `PageUrl` itself as `belongsTo(Page::class)`, hardcoded to
+                // this package's own `Page` class — it can't know about a
+                // project's resolved override (`ResourceResolver::model('page')`,
+                // same mechanism `getModelClass()` already uses everywhere
+                // else in this repository). Re-fetching explicitly through
+                // the resolved class is what actually respects a project's
+                // `App\Models\Page\Page`-style override (e.g. a customized
+                // `getContentAttribute()`).
+                /** @var Page|null $page */
+                $page = $modelClass::query()->find($pageUrl->page_id);
+
+                return $page;
             }
         }
 

@@ -172,11 +172,23 @@ return [
         'faq' => [
             'label' => 'FAQ',
             'fields' => [
+                'title' => 'Title',
                 'question' => 'Question',
                 'answer' => 'Answer',
                 'items' => 'Questions/Answers',
                 'add_item' => 'Add a question/answer',
                 'item_label' => 'Question/Answer',
+            ],
+        ],
+        'media_list' => [
+            'label' => 'Media list',
+            'fields' => [
+                'title' => 'Title',
+                'items' => 'Media',
+                'add_item' => 'Add a media',
+                'item_label' => 'Media',
+                'media' => 'Media',
+                'subtitle' => 'Subtitle',
             ],
         ]
     ],

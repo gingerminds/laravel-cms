@@ -31,7 +31,7 @@ class MenuItemRequest extends FormRequest implements FormRequestInterface
 
         foreach ($this->input('translations', []) as $langId => $fields) {
             foreach ($fields as $field => $value) {
-                if ($langId === $defaultLanguageId && $field !== 'description') {
+                if ($langId === $defaultLanguageId && !in_array($field, ['description', 'url'], true)) {
                     $rules["translations.$langId.$field"] = ['required', 'string'];
                 } else {
                     $rules["translations.$langId.$field"] = ['nullable', 'string'];

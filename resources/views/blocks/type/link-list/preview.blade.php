@@ -16,7 +16,7 @@
     @endif
 
     @if($links !== [])
-        <ul class="list-group">
+        <ul class="list-group list-group-flush">
             @foreach($links as $link)
                 @php
                     $file = !empty($link['image'])

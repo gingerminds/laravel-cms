@@ -169,5 +169,27 @@ return [
                 'link_image' => 'Image (2 Mo max)',
             ],
         ],
+        'faq' => [
+            'label' => 'FAQ',
+            'fields' => [
+                'title' => 'Titre',
+                'question' => 'Question',
+                'answer' => 'Réponse',
+                'items' => 'Questions/Réponses',
+                'add_item' => 'Ajouter une question/réponse',
+                'item_label' => 'Question/Réponse',
+            ],
+        ],
+        'media_list' => [
+            'label' => 'Liste de médias',
+            'fields' => [
+                'title' => 'Titre',
+                'items' => 'Médias',
+                'add_item' => 'Ajouter un média',
+                'item_label' => 'Média',
+                'media' => 'Média',
+                'subtitle' => 'Sous-titre',
+            ],
+        ]
     ],
 ];

@@ -81,6 +81,15 @@
             $selectedMedia   = $isMultipleMedia
                 ? $mediaModelClass::query()->whereIn('id', array_filter((array) $value))->get()
                 : (empty($value) ? null : $mediaModelClass::query()->find($value));
+
+            // `laravel-multisite` is a required dependency of this package
+            // (composer.json), so resolving the full language universe here
+            // is safe in any project — the media-select field itself only
+            // shows the "All languages"/"None"/codes hint when the resolved
+            // Media model actually exposes a `language_isos` property
+            // (project-specific), so this is a no-op wherever it doesn't.
+            $languageModelClass = \Gingerminds\LaravelMultisite\Resolver\ResourceResolver::model('language');
+            $allLanguageIsos    = $languageModelClass::query()->pluck('iso')->all();
         @endphp
         <x-gingerminds-media-manager::form.inputs.media-select
             id="{{ $inputId }}"
@@ -91,6 +100,7 @@
             :selected="$selectedMedia"
             :size="$size"
             :category-codes="$field['category_codes'] ?? []"
+            :languages="$allLanguageIsos"
         />
         @break
 
