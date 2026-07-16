@@ -16,6 +16,7 @@ use Symfony\Component\Serializer\Attribute\Groups;
 
 /**
  * @property int<0, max>|null $site_id
+ * @property int|null $parent_id
  * @property MenuItemTranslation|null $currentTranslation
  */
 #[ApiResource(

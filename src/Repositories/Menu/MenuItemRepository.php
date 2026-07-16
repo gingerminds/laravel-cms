@@ -38,8 +38,9 @@ class MenuItemRepository extends AbstractRepository implements RepositoryInterfa
             return $resourceModel;
         }
 
-        $resourceModel->fill($request->all());
-        $resourceModel->site_id = app(SiteContext::class)->site()?->id;
+        $resourceModel->fill($request->except(['translations', 'parent_id']));
+        $resourceModel->parent_id = $request->filled('parent_id') ? (int) $request->input('parent_id') : null;
+        $resourceModel->site_id   = app(SiteContext::class)->site()?->id;
         $resourceModel->save();
 
         $resourceModel->syncTranslations($request->input('translations', []));

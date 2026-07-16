@@ -24,6 +24,14 @@ class PermissionSeeder extends Seeder
         Permission::updateOrCreate(['name' => 'edit menu_items', 'guard_name' => 'web']);
         Permission::updateOrCreate(['name' => 'delete menu_items', 'guard_name' => 'web']);
 
+        Permission::updateOrCreate(['name' => 'view pages', 'guard_name' => 'web']);
+        Permission::updateOrCreate(['name' => 'edit pages', 'guard_name' => 'web']);
+        Permission::updateOrCreate(['name' => 'delete pages', 'guard_name' => 'web']);
+
+        Permission::updateOrCreate(['name' => 'view page_categories', 'guard_name' => 'web']);
+        Permission::updateOrCreate(['name' => 'edit page_categories', 'guard_name' => 'web']);
+        Permission::updateOrCreate(['name' => 'delete page_categories', 'guard_name' => 'web']);
+
         $this->command->info('Permissions table seeded!');
         // updateOrCreate roles and assign existing permissions
     }

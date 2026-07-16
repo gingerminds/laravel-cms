@@ -12,7 +12,7 @@
         type="text"
         id="translations_{{ $language->id }}_url"
         label="{{ __('gingerminds-cms::translation.form.url') }}"
-        :required="$required"
+        :required="false"
         name="translations[{{ $language->id }}][url]"
         value="{{ old('translations.'.$language->id.'.url', $translation?->url) }}"
     />
