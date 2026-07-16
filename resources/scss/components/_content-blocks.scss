@@ -73,6 +73,33 @@
     border-radius: 2rem;
 }
 
+/* Block preview fragments (see docs/Blocks.md and each block's own
+   resources/views/blocks/type/{block}/preview.blade.php) — `.cms-block-preview`
+   wraps every block type's rendered fragment, with `-title` and `-text`
+   shared by all of them (package blocks and project overrides alike).
+   Kept centralized here so a look change applies everywhere at once,
+   instead of hand-tuning it in every preview Blade. */
+.cms-block-preview-title {
+    margin-bottom: .5rem;
+    font-size: 1.05rem;
+}
+
+/* `-text` renders arbitrary wysiwyg HTML via `{!! $data['text'] !!}` —
+   strip the leading/trailing margin so the block doesn't grow taller than
+   its own content (default browser p/ul margins collapse the surrounding
+   .cms-block-item-preview padding otherwise). */
+.cms-block-preview-text > :first-child {
+    margin-top: 0;
+}
+
+.cms-block-preview-text > :last-child {
+    margin-bottom: 0;
+}
+
+.cms-block-preview-text a {
+    color: var(--bs-primary);
+}
+
 /* Repeater fields (see docs/Blocks.md, partials/repeater*.blade.php) — a
    card's own form is collapsible so a block with several of them doesn't
    dump every field of every row on the contributor at once. */
@@ -155,4 +182,12 @@
 
 .cms-repeater-row-remove:hover {
     background: rgba(var(--bs-danger-rgb), .1);
+}
+
+.cms-block-preview .list-group-item {
+    padding-left: 0!important;
+
+    p {
+        margin-bottom: 0!important;
+    }
 }

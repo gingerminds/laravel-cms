@@ -106,14 +106,15 @@ class LaravelCmsServiceProvider extends ServiceProvider
             __DIR__ . '/../../config/gingerminds-cms.php' => config_path('gingerminds-cms.php'),
         ], 'gingerminds-cms-config');
 
-        // Publication des assets JS. Pas de tag/config dédié pour le CSS :
-        // les quelques styles du package (ex. content-blocks.css) sont
-        // co-localisés avec leur JS et importés depuis celui-ci, donc ils
-        // sont publiés avec le reste de resources/js sans configuration
-        // Vite supplémentaire côté projet consommateur.
+        // Publication des assets JS/SCSS, même tag et même convention que
+        // laravel-core et laravel-media-manager : chaque package publie ses
+        // resources/js et resources/scss sous js|scss/vendor/<package>, le
+        // projet consommateur important lui-même vendor/gingerminds-cms/app
+        // dans son propre resources/scss/app.scss.
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__ . '/../../resources/js' => resource_path('js/vendor/gingerminds-cms'),
+                __DIR__ . '/../../resources/scss' => resource_path('scss/vendor/gingerminds-cms'),
+                __DIR__ . '/../../resources/js'   => resource_path('js/vendor/gingerminds-cms'),
             ], 'gingerminds-assets');
 
             // Lets a project customize the block/preview stubs used by

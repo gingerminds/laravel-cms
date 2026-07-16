@@ -169,5 +169,15 @@ return [
                 'link_image' => 'Image (max 2 MB)',
             ],
         ],
+        'faq' => [
+            'label' => 'FAQ',
+            'fields' => [
+                'question' => 'Question',
+                'answer' => 'Answer',
+                'items' => 'Questions/Answers',
+                'add_item' => 'Add a question/answer',
+                'item_label' => 'Question/Answer',
+            ],
+        ]
     ],
 ];

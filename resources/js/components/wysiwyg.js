@@ -2,7 +2,9 @@ import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import Underline from '@tiptap/extension-underline';
-import './wysiwyg.css';
+// Styling lives in resources/scss/components/_wysiwyg.scss (see
+// resources/scss/app.scss), not a co-located CSS import — see
+// content-blocks.js for why.
 
 const TOOLBAR_BUTTONS = {
     bold: {

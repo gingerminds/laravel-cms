@@ -3,11 +3,16 @@
 // modal), blocks/remove-block.js and blocks/copy-structure.js — this file
 // only wires up each canvas and dispatches clicks to the right module.
 //
+// Styling lives in resources/scss/components/_content-blocks.scss (see
+// resources/scss/app.scss) rather than an import here — this package has
+// its own SCSS build pipeline, same convention as laravel-core and
+// laravel-media-manager, so there's no reason to ride along inside the JS
+// bundle instead.
+//
 // State lives in the DOM itself (each .cms-block-item carries a JSON
 // <script> with {uid, type, data}) rather than a parallel JS array — one
 // source of truth, no risk of the two drifting apart. The hidden input is
 // resynced from that DOM state after every add/edit/remove/reorder.
-import './content-blocks.css';
 import { refreshInsertSlots, syncHiddenInput } from './blocks/dom.js';
 import { initAddBlockFlow, openEditForm, openPicker } from './blocks/add-block.js';
 import { initRemoveBlockFlow, removeBlock } from './blocks/remove-block.js';
