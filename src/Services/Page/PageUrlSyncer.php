@@ -8,54 +8,60 @@ use Gingerminds\LaravelCms\Models\Page\Page;
 use Gingerminds\LaravelCms\Models\Page\PageTranslation;
 use Gingerminds\LaravelCms\Models\Page\PageUrl;
 use Gingerminds\LaravelCms\Models\PageCategory\PageCategory;
+use Gingerminds\LaravelCms\Services\Url\AbstractUrlSyncer;
 use Gingerminds\LaravelCms\State\Page\Status\Published;
+use Illuminate\Database\Eloquent\Model;
 
-class PageUrlSyncer
+/**
+ * @extends AbstractUrlSyncer<Page, PageTranslation>
+ */
+class PageUrlSyncer extends AbstractUrlSyncer
 {
     /**
      * Recomputes every language's URL for one page.
      */
     public function syncPage(Page $page): void
     {
-        $page->load(['translations', 'category']);
-
-        if (!$page->status instanceof Published) {
-            PageUrl::query()->where('page_id', $page->id)->delete();
-
-            return;
-        }
-
-        $translatedLanguageIds = [];
-
-        foreach ($page->translations as $translation) {
-            /** @var PageTranslation $translation */
-            if (!$this->isActuallyTranslated($translation)) {
-                continue;
-            }
-
-            $categoryPath = $page->category?->getFullPathForLanguage($translation->language_id) ?? '';
-            $path         = Page::composePath($categoryPath, $translation->slug ?? '');
-
-            PageUrl::query()->updateOrCreate(
-                ['page_id' => $page->id, 'language_id' => $translation->language_id],
-                ['site_id' => $page->site_id, 'path' => $path]
-            );
-
-            $translatedLanguageIds[] = $translation->language_id;
-        }
-
-        // Authoritative, not just additive: a language that no longer
-        // qualifies (e.g. its title was cleared out after having one)
-        // must lose its stale row too, not just skip getting a new one.
-        PageUrl::query()
-            ->where('page_id', $page->id)
-            ->whereNotIn('language_id', $translatedLanguageIds)
-            ->delete();
+        $this->sync($page);
     }
 
-    private function isActuallyTranslated(PageTranslation $translation): bool
+    protected function urlModelClass(): string
     {
+        return PageUrl::class;
+    }
+
+    protected function ownerForeignKey(): string
+    {
+        return 'page_id';
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function eagerLoadRelations(): array
+    {
+        return ['category'];
+    }
+
+    protected function isPublishable(Model $owner): bool
+    {
+        /** @var Page $owner */
+        return $owner->status instanceof Published;
+    }
+
+    protected function isEligible(Model $translation): bool
+    {
+        /** @var PageTranslation $translation */
         return null !== $translation->title && '' !== $translation->title;
+    }
+
+    protected function resolvePath(Model $owner, Model $translation): string
+    {
+        /** @var Page $owner */
+        /** @var PageTranslation $translation */
+        $categoryPath = $owner->category?->getFullPathForLanguage($translation->language_id) ?? '';
+
+        return Page::composePath($categoryPath, $translation->slug ?? '');
     }
 
     public function syncCategorySubtree(PageCategory $category): void
