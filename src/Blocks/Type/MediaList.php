@@ -45,20 +45,16 @@ class MediaList extends AbstractBlock
     public function fields(): array
     {
         return [
-            $this->textField('title', __('gingerminds-cms::translation.blocks.media_list.fields.title')),
+            $this->textField('title', $this->fieldLabel('title')),
             $this->repeaterField(
                 'items',
-                __('gingerminds-cms::translation.blocks.media_list.fields.items'),
+                $this->fieldLabel('items'),
                 [
-                    $this->mediaField(
-                        'media',
-                        __('gingerminds-cms::translation.blocks.media_list.fields.media'),
-                        required: true,
-                    ),
-                    $this->textField('subtitle', __('gingerminds-cms::translation.blocks.media_list.fields.subtitle')),
+                    $this->mediaField('media', $this->fieldLabel('media'), required: true),
+                    $this->textField('subtitle', $this->fieldLabel('subtitle')),
                 ],
-                __('gingerminds-cms::translation.blocks.media_list.fields.add_item'),
-                __('gingerminds-cms::translation.blocks.media_list.fields.item_label'),
+                $this->fieldLabel('add_item'),
+                $this->fieldLabel('item_label'),
             ),
         ];
     }

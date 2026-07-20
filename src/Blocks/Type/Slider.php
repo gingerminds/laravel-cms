@@ -38,19 +38,15 @@ class Slider extends AbstractBlock
     public function fields(): array
     {
         return [
-            $this->textField('title', __('gingerminds-cms::translation.blocks.slider.fields.title')),
+            $this->textField('title', $this->fieldLabel('title')),
             $this->repeaterField(
                 'slides',
-                __('gingerminds-cms::translation.blocks.slider.fields.slides'),
+                $this->fieldLabel('slides'),
                 [
-                    $this->fileField(
-                        'image',
-                        __('gingerminds-cms::translation.blocks.slider.fields.slide_image'),
-                        required: true,
-                    ),
+                    $this->fileField('image', $this->fieldLabel('slide_image'), required: true),
                 ],
-                __('gingerminds-cms::translation.blocks.slider.fields.add_slide'),
-                __('gingerminds-cms::translation.blocks.slider.fields.slide_item_label'),
+                $this->fieldLabel('add_slide'),
+                $this->fieldLabel('slide_item_label'),
             ),
         ];
     }

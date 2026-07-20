@@ -38,25 +38,18 @@ class Cards extends AbstractBlock
     public function fields(): array
     {
         return [
-            $this->textField('title', __('gingerminds-cms::translation.blocks.cards.fields.title'), required: true),
-            $this->wysiwygField('text', __('gingerminds-cms::translation.blocks.cards.fields.text'), rows: 6),
+            $this->textField('title', $this->fieldLabel('title'), required: true),
+            $this->wysiwygField('text', $this->fieldLabel('text'), rows: 6),
             $this->repeaterField(
                 'cards',
-                __('gingerminds-cms::translation.blocks.cards.fields.cards'),
+                $this->fieldLabel('cards'),
                 [
-                    $this->textField('title', __('gingerminds-cms::translation.blocks.cards.fields.card_title')),
-                    $this->textareaField(
-                        'description',
-                        __('gingerminds-cms::translation.blocks.cards.fields.card_description'),
-                    ),
-                    $this->fileField(
-                        'image',
-                        __('gingerminds-cms::translation.blocks.cards.fields.card_image'),
-                        required: true,
-                    ),
+                    $this->textField('title', $this->fieldLabel('card_title')),
+                    $this->textareaField('description', $this->fieldLabel('card_description')),
+                    $this->fileField('image', $this->fieldLabel('card_image'), required: true),
                 ],
-                __('gingerminds-cms::translation.blocks.cards.fields.add_card'),
-                __('gingerminds-cms::translation.blocks.cards.fields.card_item_label'),
+                $this->fieldLabel('add_card'),
+                $this->fieldLabel('card_item_label'),
             ),
         ];
     }

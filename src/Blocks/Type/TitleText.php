@@ -35,12 +35,8 @@ class TitleText extends AbstractBlock
     public function fields(): array
     {
         return [
-            $this->textField(
-                'title',
-                __('gingerminds-cms::translation.blocks.title_text.fields.title'),
-                required: true,
-            ),
-            $this->wysiwygField('text', __('gingerminds-cms::translation.blocks.title_text.fields.text')),
+            $this->textField('title', $this->fieldLabel('title'), required: true),
+            $this->wysiwygField('text', $this->fieldLabel('text')),
         ];
     }
 

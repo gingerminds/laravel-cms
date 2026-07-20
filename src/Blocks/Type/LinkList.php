@@ -42,30 +42,21 @@ class LinkList extends AbstractBlock
     public function fields(): array
     {
         return [
-            $this->textField('title', __('gingerminds-cms::translation.blocks.link_list.fields.title'), required: true),
+            $this->textField('title', $this->fieldLabel('title'), required: true),
             $this->repeaterField(
                 'links',
-                __('gingerminds-cms::translation.blocks.link_list.fields.links'),
+                $this->fieldLabel('links'),
                 [
-                    $this->textField(
-                        'label',
-                        __('gingerminds-cms::translation.blocks.link_list.fields.link_label'),
-                        required: true,
-                    ),
-                    $this->textField(
-                        'url',
-                        __('gingerminds-cms::translation.blocks.link_list.fields.link_url'),
-                        required: true,
-                        extra: ['rules' => ['url']],
-                    ),
+                    $this->textField('label', $this->fieldLabel('link_label'), required: true),
+                    $this->textField('url', $this->fieldLabel('link_url'), required: true, extra: ['rules' => ['url']]),
                     $this->fileField(
                         'image',
-                        __('gingerminds-cms::translation.blocks.link_list.fields.link_image'),
+                        $this->fieldLabel('link_image'),
                         extra: ['max_size_kb' => 2048, 'max_size_mb' => 2],
                     ),
                 ],
-                __('gingerminds-cms::translation.blocks.link_list.fields.add_link'),
-                __('gingerminds-cms::translation.blocks.link_list.fields.link_item_label'),
+                $this->fieldLabel('add_link'),
+                $this->fieldLabel('link_item_label'),
             ),
         ];
     }

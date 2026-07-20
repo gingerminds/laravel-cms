@@ -36,29 +36,16 @@ class FrequentlyAskedQuestions extends AbstractBlock
     public function fields(): array
     {
         return [
-            // Was pointing at `link_list.fields.title` (copy-paste
-            // leftover from that block, see its docblock this one used to
-            // share verbatim) — same "harmless today, wrong and fragile"
-            // situation as Video/Media's own title-field slip.
-            $this->textField('title', __('gingerminds-cms::translation.blocks.faq.fields.title'), required: true),
+            $this->textField('title', $this->fieldLabel('title'), required: true),
             $this->repeaterField(
                 'items',
-                __('gingerminds-cms::translation.blocks.faq.fields.items'),
+                $this->fieldLabel('items'),
                 [
-                    $this->textField(
-                        'question',
-                        __('gingerminds-cms::translation.blocks.faq.fields.question'),
-                        required: true,
-                        size: 'xl',
-                    ),
-                    $this->wysiwygField(
-                        'answer',
-                        __('gingerminds-cms::translation.blocks.faq.fields.answer'),
-                        required: true,
-                    ),
+                    $this->textField('question', $this->fieldLabel('question'), required: true, size: 'xl'),
+                    $this->wysiwygField('answer', $this->fieldLabel('answer'), required: true),
                 ],
-                __('gingerminds-cms::translation.blocks.faq.fields.add_item'),
-                __('gingerminds-cms::translation.blocks.faq.fields.item_label'),
+                $this->fieldLabel('add_item'),
+                $this->fieldLabel('item_label'),
             ),
         ];
     }

@@ -31,6 +31,48 @@ abstract class AbstractBlock implements BlockInterface
     }
 
     /**
+     * Shorthand for `{translationNamespace()}.blocks.{key()}.fields.{path}`
+     * — every field/sub-field/repeater add_label/item_label translation key
+     * for a block follows that shape, differing only in `$path`. Deriving
+     * the `blocks.{key()}` segment from `key()` instead of typing it out per
+     * call does two things at once: it's what lets most field calls fit on
+     * one line (the full string was what pushed calls over phpcs' 120-column
+     * limit, forcing multi-line calls whose *shape* Sonar's clone detector
+     * then matched across blocks as duplication), and it makes a
+     * copy-pasted block pointing at a sibling block's key by mistake
+     * structurally impossible — which is exactly the bug `Video`, `Media`,
+     * and `FrequentlyAskedQuestions` each had before this existed.
+     */
+    protected function fieldLabel(string $path): string
+    {
+        return __("{$this->translationNamespace()}.blocks.{$this->key()}.fields.{$path}");
+    }
+
+    /**
+     * Defaults to this package's own lang namespace since every block
+     * shipped here (`src/Blocks/Type/*`) translates through it — but
+     * `fieldLabel()` has no business assuming that for a block it doesn't
+     * own. A block living in another package, or a project's own
+     * `App\Cms\Blocks\*` (`make:cms-block`) translating through its default,
+     * prefix-less `lang/*.php` instead, overrides this one method (e.g.
+     * `return 'my-package::translation';` or just `return 'translation';`)
+     * and every `fieldLabel()` call in that block resolves correctly — no
+     * need to touch `fieldLabel()` itself.
+     *
+     * A project-side *override* of one of this package's own blocks (see
+     * `App\Cms\BlockOverrides\*` in the consuming app) is a different case:
+     * it extends the package's block class, so it inherits this default and
+     * `fieldLabel()` keeps resolving that block's *own* fields correctly —
+     * any field the override adds on top (e.g. a project-only `headline`)
+     * just isn't a `gingerminds-cms::` key at all, so it's translated with a
+     * plain `__(...)` call instead, same as before `fieldLabel()` existed.
+     */
+    protected function translationNamespace(): string
+    {
+        return 'gingerminds-cms::translation';
+    }
+
+    /**
      * @param array<string, mixed> $extra
      * @return array<string, mixed>
      */
