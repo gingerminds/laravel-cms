@@ -3,7 +3,6 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use stdClass;
 
 return new class () extends Migration {
     /**
