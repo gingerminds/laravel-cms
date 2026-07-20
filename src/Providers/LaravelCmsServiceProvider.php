@@ -308,6 +308,6 @@ class LaravelCmsServiceProvider extends ServiceProvider
      */
     private function packageConfigDefaults(): array
     {
-        return $this->packageConfigDefaults ??= require_once self::CONFIG_PATH;
+        return $this->packageConfigDefaults ??= require self::CONFIG_PATH;
     }
 }
