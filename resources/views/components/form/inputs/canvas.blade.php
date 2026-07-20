@@ -46,7 +46,7 @@
 
     <template id="cmsBlockLoadingTemplate">
         <div class="text-center text-muted py-4">
-            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+            <output class="spinner-border spinner-border-sm me-2"></output>
             <span class="cms-block-loading-label"></span>
         </div>
     </template>

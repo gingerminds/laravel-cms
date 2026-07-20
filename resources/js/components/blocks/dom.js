@@ -69,6 +69,11 @@ export function readBlockData(item) {
     try {
         return JSON.parse(script?.textContent || '{}');
     } catch (e) {
+        // Corrupted/unparsable block data — fall back to whatever the
+        // dataset attributes still carry, but log it: this should never
+        // happen in practice, so silently hiding it would make a real data
+        // corruption issue invisible.
+        console.warn('readBlockData: failed to parse block data, falling back to dataset', e);
         return { uid: item.dataset.uid, type: item.dataset.type, data: {} };
     }
 }

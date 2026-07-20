@@ -41,12 +41,12 @@ class MediaReferenceResolver implements ReferenceFieldResolver
         }
 
         return [
-            'id'                  => $loaded->getAttribute('id'),
-            'name'                => $loaded->getAttribute('name'),
-            'file_reference'      => $loaded->getAttribute('file_reference'),
-            'file_size'           => $loaded->getAttribute('file_size'),
+            'id' => $loaded->getAttribute('id'),
+            'name' => $loaded->getAttribute('name'),
+            'file_reference' => $loaded->getAttribute('file_reference'),
+            'file_size' => $loaded->getAttribute('file_size'),
             'thumbnail_reference' => $loaded->getAttribute('thumbnail_reference'),
-            'thumbnail_size'      => $loaded->getAttribute('thumbnail_size'),
+            'thumbnail_size' => $loaded->getAttribute('thumbnail_size'),
         ];
     }
 }

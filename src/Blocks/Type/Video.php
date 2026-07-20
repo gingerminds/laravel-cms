@@ -35,20 +35,8 @@ class Video extends AbstractBlock
     public function fields(): array
     {
         return [
-            [
-                'name'     => 'title',
-                'type'     => 'text',
-                'label'    => __('gingerminds-cms::translation.blocks.title_text.fields.title'),
-                'required' => false,
-                'size'     => 'md',
-            ],
-            [
-                'name'     => 'embed_code',
-                'type'     => 'text',
-                'label'    => __('gingerminds-cms::translation.blocks.video.fields.embed_code'),
-                'required' => true,
-                'size'     => 'md',
-            ],
+            $this->textField('title', $this->fieldLabel('title')),
+            $this->textField('embed_code', $this->fieldLabel('embed_code'), required: true),
         ];
     }
 

@@ -76,17 +76,17 @@ return new class () extends Migration {
                 $slug = $translation->slug ?? '';
                 $path = match (true) {
                     '' === $categoryPath => $slug,
-                    '' === $slug         => $categoryPath,
-                    default              => $categoryPath . '/' . $slug,
+                    '' === $slug => $categoryPath,
+                    default => $categoryPath . '/' . $slug,
                 };
 
                 $rows[] = [
-                    'page_id'     => $page->id,
+                    'page_id' => $page->id,
                     'language_id' => $translation->language_id,
-                    'site_id'     => $page->site_id,
-                    'path'        => $path,
-                    'created_at'  => $now,
-                    'updated_at'  => $now,
+                    'site_id' => $page->site_id,
+                    'path' => $path,
+                    'created_at' => $now,
+                    'updated_at' => $now,
                 ];
             }
         }

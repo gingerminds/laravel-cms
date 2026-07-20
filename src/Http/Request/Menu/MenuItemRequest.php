@@ -17,14 +17,14 @@ class MenuItemRequest extends FormRequest implements FormRequestInterface
     public function rules(): array
     {
         $rules = [
-            'code'            => 'required|string|max:255',
-            'parent_id'       => 'nullable|integer|exists:menu_items,id',
-            'is_active'       => 'required|boolean',
-            'position'        => 'required|integer|min:0',
+            'code' => 'required|string|max:255',
+            'parent_id' => 'nullable|integer|exists:menu_items,id',
+            'is_active' => 'required|boolean',
+            'position' => 'required|integer|min:0',
             'is_target_blank' => 'required|boolean',
-            'is_no_referrer'  => 'required|boolean',
-            'is_no_opener'    => 'required|boolean',
-            'translations'    => 'required|array',
+            'is_no_referrer' => 'required|boolean',
+            'is_no_opener' => 'required|boolean',
+            'translations' => 'required|array',
         ];
 
         $defaultLanguageId = app(SiteContext::class)->site()?->defaultLanguage()->first()?->id;
@@ -45,8 +45,8 @@ class MenuItemRequest extends FormRequest implements FormRequestInterface
     public function attributes(): array
     {
         return $this->translationAttributes([
-            'name'        => __('gingerminds-core::translation.form.name'),
-            'url'         => __('gingerminds-cms::translation.form.url'),
+            'name' => __('gingerminds-core::translation.form.name'),
+            'url' => __('gingerminds-cms::translation.form.url'),
             'description' => __('gingerminds-core::translation.form.description'),
         ]);
     }

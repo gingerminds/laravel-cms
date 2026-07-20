@@ -22,13 +22,20 @@
     $idPrefix     = 'cms_block_field_' . $repeaterName;
     $itemLabel    = $field['item_label'] ?? __('gingerminds-cms::translation.blocks.message.repeater_row_label');
 @endphp
-<div class="col-12">
-    <label class="form-label">
+{{-- A `<fieldset>`/`<legend>` pair, not `<label>` — this caption describes
+     the whole group of rows/sub-fields below, not one specific control, so
+     a bare `<label>` here would have nothing to be "for" (each sub-field
+     gets its own properly associated label via field.blade.php). The extra
+     classes on both just cancel the browser/Bootstrap default fieldset
+     border and legend size/float so it still looks exactly like the plain
+     label it replaces. --}}
+<fieldset class="col-12 border-0 p-0 m-0">
+    <legend class="form-label fs-6 fw-normal float-none w-auto mb-2 p-0">
         {{ $field['label'] }}
         @if($required)
             <span class="text-danger">*</span>
         @endif
-    </label>
+    </legend>
 
     {{-- data-next-index never reuses an index after a row is removed —
          see repeater.js — so it starts at the current row count and only
@@ -79,4 +86,4 @@
     @if($field['helper'] ?? null)
         <div class="form-text">{{ $field['helper'] }}</div>
     @endif
-</div>
+</fieldset>

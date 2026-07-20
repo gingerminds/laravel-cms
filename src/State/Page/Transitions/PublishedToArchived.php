@@ -17,7 +17,7 @@ class PublishedToArchived extends AbstractPageStatusTransition
     protected function timestamps(): array
     {
         return [
-            'archived_at'  => now(),
+            'archived_at' => now(),
             'published_at' => null,
         ];
     }

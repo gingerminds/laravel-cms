@@ -42,48 +42,22 @@ class LinkList extends AbstractBlock
     public function fields(): array
     {
         return [
-            [
-                'name'     => 'title',
-                'type'     => 'text',
-                'label'    => __('gingerminds-cms::translation.blocks.link_list.fields.title'),
-                'required' => true,
-                'size'     => 'md',
-            ],
-            [
-                'name'       => 'links',
-                'type'       => 'repeater',
-                'label'      => __('gingerminds-cms::translation.blocks.link_list.fields.links'),
-                'required'   => false,
-                'default'    => [],
-                'add_label'  => __('gingerminds-cms::translation.blocks.link_list.fields.add_link'),
-                'item_label' => __('gingerminds-cms::translation.blocks.link_list.fields.link_item_label'),
-                'fields'     => [
-                    [
-                        'name'     => 'label',
-                        'type'     => 'text',
-                        'label'    => __('gingerminds-cms::translation.blocks.link_list.fields.link_label'),
-                        'required' => true,
-                        'size'     => 'md',
-                    ],
-                    [
-                        'name'     => 'url',
-                        'type'     => 'text',
-                        'label'    => __('gingerminds-cms::translation.blocks.link_list.fields.link_url'),
-                        'required' => true,
-                        'size'     => 'md',
-                        'rules'    => ['url'],
-                    ],
-                    [
-                        'name'        => 'image',
-                        'type'        => 'file',
-                        'label'       => __('gingerminds-cms::translation.blocks.link_list.fields.link_image'),
-                        'required'    => false,
-                        'size'        => 'md',
-                        'max_size_kb' => 2048,
-                        'max_size_mb' => 2,
-                    ],
+            $this->textField('title', $this->fieldLabel('title'), required: true),
+            $this->repeaterField(
+                'links',
+                $this->fieldLabel('links'),
+                [
+                    $this->textField('label', $this->fieldLabel('link_label'), required: true),
+                    $this->textField('url', $this->fieldLabel('link_url'), required: true, extra: ['rules' => ['url']]),
+                    $this->fileField(
+                        'image',
+                        $this->fieldLabel('link_image'),
+                        extra: ['max_size_kb' => 2048, 'max_size_mb' => 2],
+                    ),
                 ],
-            ],
+                $this->fieldLabel('add_link'),
+                $this->fieldLabel('link_item_label'),
+            ),
         ];
     }
 

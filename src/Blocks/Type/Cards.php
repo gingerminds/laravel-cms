@@ -38,54 +38,19 @@ class Cards extends AbstractBlock
     public function fields(): array
     {
         return [
-            [
-                'name'     => 'title',
-                'type'     => 'text',
-                'label'    => __('gingerminds-cms::translation.blocks.cards.fields.title'),
-                'required' => true,
-                'size'     => 'md',
-            ],
-            [
-                'name'     => 'text',
-                'type'     => 'wysiwyg',
-                'label'    => __('gingerminds-cms::translation.blocks.cards.fields.text'),
-                'required' => false,
-                'size'     => 'xl',
-                'preset'   => 'default',
-                'rows'     => 6,
-            ],
-            [
-                'name'       => 'cards',
-                'type'       => 'repeater',
-                'label'      => __('gingerminds-cms::translation.blocks.cards.fields.cards'),
-                'required'   => false,
-                'default'    => [],
-                'add_label'  => __('gingerminds-cms::translation.blocks.cards.fields.add_card'),
-                'item_label' => __('gingerminds-cms::translation.blocks.cards.fields.card_item_label'),
-                'fields'     => [
-                    [
-                        'name'     => 'title',
-                        'type'     => 'text',
-                        'label'    => __('gingerminds-cms::translation.blocks.cards.fields.card_title'),
-                        'required' => false,
-                        'size'     => 'md',
-                    ],
-                    [
-                        'name'     => 'description',
-                        'type'     => 'textarea',
-                        'label'    => __('gingerminds-cms::translation.blocks.cards.fields.card_description'),
-                        'required' => false,
-                        'size'     => 'xl',
-                    ],
-                    [
-                        'name'     => 'image',
-                        'type'     => 'file',
-                        'label'    => __('gingerminds-cms::translation.blocks.cards.fields.card_image'),
-                        'required' => true,
-                        'size'     => 'md',
-                    ],
+            $this->textField('title', $this->fieldLabel('title'), required: true),
+            $this->wysiwygField('text', $this->fieldLabel('text'), rows: 6),
+            $this->repeaterField(
+                'cards',
+                $this->fieldLabel('cards'),
+                [
+                    $this->textField('title', $this->fieldLabel('card_title')),
+                    $this->textareaField('description', $this->fieldLabel('card_description')),
+                    $this->fileField('image', $this->fieldLabel('card_image'), required: true),
                 ],
-            ],
+                $this->fieldLabel('add_card'),
+                $this->fieldLabel('card_item_label'),
+            ),
         ];
     }
 

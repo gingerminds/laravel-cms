@@ -66,9 +66,9 @@ return new class () extends Migration {
 
         foreach ($siteIdsNeedingDefault as $siteId) {
             $categoryId = DB::table('page_categories')->insertGetId([
-                'code'       => 'default',
-                'site_id'    => $siteId,
-                'parent_id'  => null,
+                'code' => 'default',
+                'site_id' => $siteId,
+                'parent_id' => null,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -80,12 +80,12 @@ return new class () extends Migration {
             foreach ($languageIds as $languageId) {
                 DB::table('page_category_translations')->insert([
                     'page_category_id' => $categoryId,
-                    'language_id'      => $languageId,
-                    'site_id'          => $siteId,
-                    'name'             => 'Default',
-                    'prefix'           => '',
-                    'created_at'       => now(),
-                    'updated_at'       => now(),
+                    'language_id' => $languageId,
+                    'site_id' => $siteId,
+                    'name' => 'Default',
+                    'prefix' => '',
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ]);
             }
 

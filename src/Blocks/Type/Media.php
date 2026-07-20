@@ -39,21 +39,8 @@ class Media extends AbstractBlock
     public function fields(): array
     {
         return [
-            [
-                'name'     => 'title',
-                'type'     => 'text',
-                'label'    => __('gingerminds-cms::translation.blocks.title_text.fields.title'),
-                'required' => true,
-                'size'     => 'md',
-            ],
-            [
-                'name'     => 'file',
-                'type'     => 'file',
-                'label'    => __('gingerminds-cms::translation.blocks.media.fields.file'),
-                'required' => true,
-                'size'     => 'xl',
-                'mimes'    => null,
-            ],
+            $this->textField('title', $this->fieldLabel('title'), required: true),
+            $this->fileField('file', $this->fieldLabel('file'), required: true, size: 'xl', extra: ['mimes' => null]),
         ];
     }
 

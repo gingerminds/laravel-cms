@@ -36,14 +36,16 @@ use RecursiveIteratorIterator;
 
 class LaravelCmsServiceProvider extends ServiceProvider
 {
+    private const string CONFIG_PATH = __DIR__ . '/../../config/gingerminds-cms.php';
+
+    /** @var array<string, mixed>|null */
+    private ?array $packageConfigDefaults = null;
+
     public function register(): void
     {
         $this->app->register(LaravelCmsAuthServiceProvider::class);
 
-        $this->mergeConfigFrom(
-            __DIR__ . '/../../config/gingerminds-cms.php',
-            'gingerminds-cms'
-        );
+        $this->mergeConfigFrom(self::CONFIG_PATH, 'gingerminds-cms');
 
         $this->mergeAdditiveArrayConfig('disabled_blocks');
         $this->mergeAdditiveArrayConfig('block_paths', 'path');
@@ -103,7 +105,7 @@ class LaravelCmsServiceProvider extends ServiceProvider
 
         // Publication de la config
         $this->publishes([
-            __DIR__ . '/../../config/gingerminds-cms.php' => config_path('gingerminds-cms.php'),
+            self::CONFIG_PATH => config_path('gingerminds-cms.php'),
         ], 'gingerminds-cms-config');
 
         // Publication des assets JS/SCSS, même tag et même convention que
@@ -114,7 +116,7 @@ class LaravelCmsServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->publishes([
                 __DIR__ . '/../../resources/scss' => resource_path('scss/vendor/gingerminds-cms'),
-                __DIR__ . '/../../resources/js'   => resource_path('js/vendor/gingerminds-cms'),
+                __DIR__ . '/../../resources/js' => resource_path('js/vendor/gingerminds-cms'),
             ], 'gingerminds-assets');
 
             // Lets a project customize the block/preview stubs used by
@@ -265,9 +267,8 @@ class LaravelCmsServiceProvider extends ServiceProvider
      */
     private function mergeAdditiveArrayConfig(string $key, ?string $uniqueBy = null, bool $associative = false): void
     {
-        $packageDefaults = require __DIR__ . '/../../config/gingerminds-cms.php';
-        $default         = $packageDefaults[$key] ?? [];
-        $published       = config("gingerminds-cms.{$key}", []);
+        $default   = $this->packageConfigDefaults()[$key] ?? [];
+        $published = config("gingerminds-cms.{$key}", []);
 
         $merged = array_merge($default, $published);
 
@@ -287,5 +288,26 @@ class LaravelCmsServiceProvider extends ServiceProvider
         }
 
         config(["gingerminds-cms.{$key}" => $merged]);
+    }
+
+    /**
+     * The package's own, un-overridden config array — `mergeAdditiveArrayConfig()`
+     * needs it as-is, but by the time it runs, `mergeConfigFrom()` (see
+     * `register()`) has already shallow-replaced this same key in Laravel's
+     * config repository with the project's published value, so reading it
+     * back via `config('gingerminds-cms...')` won't do.
+     *
+     * Loaded through a single, memoized call site instead of a `require`
+     * inline in `mergeAdditiveArrayConfig()`: that used to be a
+     * `require_once` called once per config key (three times total), which
+     * only returns the file's array on the *first* of those calls — every
+     * call after that silently got `1` instead, and `$default` ended up
+     * empty for two of the three keys.
+     *
+     * @return array<string, mixed>
+     */
+    private function packageConfigDefaults(): array
+    {
+        return $this->packageConfigDefaults ??= require_once self::CONFIG_PATH;
     }
 }

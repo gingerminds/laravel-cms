@@ -52,8 +52,8 @@ class BlockRequestSupport
 
         return view($viewName, [
             'block' => $block,
-            'uid'   => $uid,
-            'data'  => $data,
+            'uid' => $uid,
+            'data' => $data,
         ])->render();
     }
 }

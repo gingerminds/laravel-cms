@@ -13,8 +13,8 @@ class MenuItemReorderRequest extends FormRequest implements FormRequestInterface
     public function rules(): array
     {
         return [
-            'ids'       => 'required|array',
-            'ids.*'     => 'integer|exists:menu_items,id',
+            'ids' => 'required|array',
+            'ids.*' => 'integer|exists:menu_items,id',
             'parent_id' => 'nullable|integer|exists:menu_items,id',
         ];
     }

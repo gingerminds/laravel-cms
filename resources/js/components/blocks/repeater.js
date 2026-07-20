@@ -66,7 +66,12 @@ function initRowSorting(repeater) {
     const rowsContainer = repeater.querySelector(':scope > [data-role="rows"]');
     if (!window.Sortable || !rowsContainer) return;
 
-    new Sortable(rowsContainer, {
+    // Kept on the element (rather than discarded as a bare `new Sortable(...)`
+    // statement) so it can be torn down below — otherwise reordering a
+    // repeater whose form gets re-rendered in place would pile up duplicate,
+    // still-listening Sortable instances on the same nodes.
+    rowsContainer.sortableInstance?.destroy();
+    rowsContainer.sortableInstance = new Sortable(rowsContainer, {
         animation: 150,
         handle: '[data-role="drag-handle"]',
         ghostClass: 'sortable-ghost',

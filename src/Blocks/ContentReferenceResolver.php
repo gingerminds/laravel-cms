@@ -160,34 +160,58 @@ class ContentReferenceResolver
             $type = $field['type'] ?? null;
 
             if ($type === 'repeater') {
-                foreach ((array) ($data[$field['name']] ?? []) as $row) {
-                    if (is_array($row)) {
-                        array_push($ids, ...self::collectFieldIds($field['fields'] ?? [], $row, $fieldType));
-                    }
-                }
-
+                array_push(
+                    $ids,
+                    ...self::collectRepeaterFieldIds($field['fields'] ?? [], $data[$field['name']] ?? null, $fieldType),
+                );
                 continue;
             }
 
-            if ($type !== $fieldType) {
-                continue;
-            }
-
-            $value = $data[$field['name']] ?? null;
-
-            if ($field['multiple'] ?? false) {
-                array_push($ids, ...array_filter(
-                    (array) $value,
-                    static fn (mixed $id): bool => $id !== null && $id !== '',
-                ));
-                continue;
-            }
-
-            if ($value !== null && $value !== '') {
-                $ids[] = $value;
+            if ($type === $fieldType) {
+                array_push($ids, ...self::collectMatchingFieldIds($field, $data[$field['name']] ?? null));
             }
         }
 
         return $ids;
+    }
+
+    /**
+     * `collectFieldIds()`'s repeater branch, split out purely to keep both
+     * functions' cognitive complexity down — same reasoning as the
+     * equivalent split in `BlockFileFieldSync`.
+     *
+     * @param array<int, array<string, mixed>> $fields
+     * @return array<int, int|string>
+     */
+    private static function collectRepeaterFieldIds(array $fields, mixed $rows, string $fieldType): array
+    {
+        $ids = [];
+
+        foreach ((array) $rows as $row) {
+            if (is_array($row)) {
+                array_push($ids, ...self::collectFieldIds($fields, $row, $fieldType));
+            }
+        }
+
+        return $ids;
+    }
+
+    /**
+     * `collectFieldIds()`'s matching-type branch: a single value or, for a
+     * `multiple` field, a list of them, with empty/null entries dropped.
+     *
+     * @param array<string, mixed> $field
+     * @return array<int, int|string>
+     */
+    private static function collectMatchingFieldIds(array $field, mixed $value): array
+    {
+        if ($field['multiple'] ?? false) {
+            return array_values(array_filter(
+                (array) $value,
+                static fn (mixed $id): bool => $id !== null && $id !== '',
+            ));
+        }
+
+        return ($value !== null && $value !== '') ? [$value] : [];
     }
 }

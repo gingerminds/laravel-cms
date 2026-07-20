@@ -7,7 +7,6 @@ namespace Gingerminds\LaravelCms\Blocks;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use ReflectionClass;
-use RuntimeException;
 
 /**
  * Content block registry.
@@ -127,13 +126,7 @@ class BlockRegistry
             // generate a colliding key, but a hand-written or copy-pasted
             // block bypasses that guard, so it's enforced here too.
             if (isset($blocks[$key]) && $blocks[$key]::class !== $class) {
-                throw new RuntimeException(sprintf(
-                    'Duplicate content block key "%s": both %s and %s declare it. '
-                        . 'Block keys must be unique (see docs/Blocks.md).',
-                    $key,
-                    $blocks[$key]::class,
-                    $class
-                ));
+                throw DuplicateBlockKeyException::forKey($key, $blocks[$key]::class, $class);
             }
 
             $blocks[$key] = $instance;

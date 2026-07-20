@@ -58,7 +58,7 @@ class PageRequest extends FormRequest implements FormRequestInterface
         $siteId = app(SiteContext::class)->site()?->id;
 
         $rules = [
-            'code'        => $this->codeRules($siteId, $page),
+            'code' => $this->codeRules($siteId, $page),
             'category_id' => $this->categoryIdRules($siteId, $page),
         ];
 
@@ -232,11 +232,11 @@ class PageRequest extends FormRequest implements FormRequestInterface
         ];
 
         return $attributes + $this->translationAttributes([
-            'title'       => __('gingerminds-cms::translation.form.title'),
-            'slug'        => __('gingerminds-cms::translation.form.slug'),
-            'hook'        => __('gingerminds-cms::translation.form.hook'),
+            'title' => __('gingerminds-cms::translation.form.title'),
+            'slug' => __('gingerminds-cms::translation.form.slug'),
+            'hook' => __('gingerminds-cms::translation.form.hook'),
             'main_visual' => __('gingerminds-cms::translation.form.main_visual'),
-            'thumbnail'   => __('gingerminds-media-manager::translation.form.thumbnail'),
+            'thumbnail' => __('gingerminds-media-manager::translation.form.thumbnail'),
         ]) + $this->contentAttributes();
     }
 
