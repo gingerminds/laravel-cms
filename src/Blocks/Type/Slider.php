@@ -39,27 +39,27 @@ class Slider extends AbstractBlock
     {
         return [
             [
-                'name'     => 'title',
-                'type'     => 'text',
-                'label'    => __('gingerminds-cms::translation.blocks.slider.fields.title'),
+                'name' => 'title',
+                'type' => 'text',
+                'label' => __('gingerminds-cms::translation.blocks.slider.fields.title'),
                 'required' => false,
-                'size'     => 'md',
+                'size' => 'md',
             ],
             [
-                'name'       => 'slides',
-                'type'       => 'repeater',
-                'label'      => __('gingerminds-cms::translation.blocks.slider.fields.slides'),
-                'required'   => false,
-                'default'    => [],
-                'add_label'  => __('gingerminds-cms::translation.blocks.slider.fields.add_slide'),
+                'name' => 'slides',
+                'type' => 'repeater',
+                'label' => __('gingerminds-cms::translation.blocks.slider.fields.slides'),
+                'required' => false,
+                'default' => [],
+                'add_label' => __('gingerminds-cms::translation.blocks.slider.fields.add_slide'),
                 'item_label' => __('gingerminds-cms::translation.blocks.slider.fields.slide_item_label'),
-                'fields'     => [
+                'fields' => [
                     [
-                        'name'     => 'image',
-                        'type'     => 'file',
-                        'label'    => __('gingerminds-cms::translation.blocks.slider.fields.slide_image'),
+                        'name' => 'image',
+                        'type' => 'file',
+                        'label' => __('gingerminds-cms::translation.blocks.slider.fields.slide_image'),
                         'required' => true,
-                        'size'     => 'md',
+                        'size' => 'md',
                     ],
                 ],
             ],

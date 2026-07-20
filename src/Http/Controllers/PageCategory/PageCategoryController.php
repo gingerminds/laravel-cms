@@ -34,7 +34,7 @@ class PageCategoryController extends AbstractController
         $view = 'gingerminds-cms::pages.page_categories.index';
 
         return view($view, [
-            'resource'  => ResourceResolver::model('page_category'),
+            'resource' => ResourceResolver::model('page_category'),
             'rootItems' => $rootItems,
         ]);
     }
@@ -47,10 +47,10 @@ class PageCategoryController extends AbstractController
         $view = 'gingerminds-cms::pages.page_categories.create';
 
         return view($view, [
-            'categories'      => $this->repository->getAllForSelect(),
+            'categories' => $this->repository->getAllForSelect(),
             'defaultLanguage' => $site?->defaultLanguage()->first(),
-            'languages'       => $site?->languages,
-            'parentId'        => $request->query('parent_id'),
+            'languages' => $site?->languages,
+            'parentId' => $request->query('parent_id'),
         ]);
     }
 
@@ -62,10 +62,10 @@ class PageCategoryController extends AbstractController
         $view = 'gingerminds-cms::pages.page_categories.edit';
 
         return view($view, [
-            'pageCategory'    => $pageCategory,
-            'categories'      => $this->repository->getAllForSelect(),
+            'pageCategory' => $pageCategory,
+            'categories' => $this->repository->getAllForSelect(),
             'defaultLanguage' => $site?->defaultLanguage()->first(),
-            'languages'       => $site?->languages,
+            'languages' => $site?->languages,
         ]);
     }
 

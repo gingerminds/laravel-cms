@@ -34,9 +34,9 @@ class PageFilterComputeService
 
         return [
             'status' => [
-                'type'     => $filterConfig['status']['type']     ?? 'select-state',
+                'type' => $filterConfig['status']['type']         ?? 'select-state',
                 'multiple' => $filterConfig['status']['multiple'] ?? true,
-                'options'  => $this->computeStatusFilter(),
+                'options' => $this->computeStatusFilter(),
             ],
         ];
     }
@@ -54,8 +54,8 @@ class PageFilterComputeService
         $selectedRaw   = $activeFilters['status'] ?? null;
         $selectedCodes = match (true) {
             is_array($selectedRaw) => array_map('strval', $selectedRaw),
-            $selectedRaw !== null  => [(string) $selectedRaw],
-            default                => [],
+            $selectedRaw !== null => [(string) $selectedRaw],
+            default => [],
         };
 
         $rows = $this->pageRepository->getStatusFacetCounts();

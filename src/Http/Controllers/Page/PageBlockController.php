@@ -47,10 +47,10 @@ class PageBlockController extends AbstractController
         $html = BlockRequestSupport::renderView('gingerminds-cms::blocks.partials.form', $block, $uid, $data);
 
         return response()->json([
-            'uid'   => $uid,
-            'type'  => $block->key(),
+            'uid' => $uid,
+            'type' => $block->key(),
             'label' => $block->label(),
-            'html'  => $html,
+            'html' => $html,
         ]);
     }
 
@@ -86,10 +86,10 @@ class PageBlockController extends AbstractController
         $preview = BlockRequestSupport::renderView($block->previewView(), $block, $uid, $data);
 
         return response()->json([
-            'uid'     => $uid,
-            'type'    => $block->key(),
-            'label'   => $block->label(),
-            'data'    => $data,
+            'uid' => $uid,
+            'type' => $block->key(),
+            'label' => $block->label(),
+            'data' => $data,
             'preview' => $preview,
         ]);
     }

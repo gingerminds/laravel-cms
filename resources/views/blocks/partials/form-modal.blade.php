@@ -9,12 +9,14 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="cmsBlockFormModalLabel"></h5>
+                <h5 class="modal-title" id="cmsBlockFormModalLabel">
+                    {{ __('gingerminds-cms::translation.blocks.message.loading') }}
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body" id="cmsBlockFormModalBody">
                 <div class="text-center text-muted py-4">
-                    <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                    <output class="spinner-border spinner-border-sm me-2"></output>
                     {{ __('gingerminds-cms::translation.blocks.message.loading') }}
                 </div>
             </div>

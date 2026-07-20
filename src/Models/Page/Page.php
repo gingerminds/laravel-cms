@@ -197,8 +197,8 @@ class Page extends Model implements ResourceModelInterface, FilterableModelInter
     {
         return match (true) {
             '' === $categoryPath => $slug,
-            '' === $slug         => $categoryPath,
-            default              => $categoryPath . '/' . $slug,
+            '' === $slug => $categoryPath,
+            default => $categoryPath . '/' . $slug,
         };
     }
 
@@ -303,17 +303,17 @@ class Page extends Model implements ResourceModelInterface, FilterableModelInter
 
         return [
             'published_at' => [
-                'type'  => 'date',
+                'type' => 'date',
                 'label' => 'gingerminds-cms::translation.form.published_at',
             ],
             'status' => [
-                'type'     => 'select-state',
-                'label'    => 'gingerminds-cms::translation.pages.form.status',
-                'choices'  => $statusChoices,
+                'type' => 'select-state',
+                'label' => 'gingerminds-cms::translation.pages.form.status',
+                'choices' => $statusChoices,
                 'multiple' => true,
             ],
             'category_id' => [
-                'type'  => 'select-model',
+                'type' => 'select-model',
                 'label' => 'gingerminds-cms::translation.pages.form.category',
                 'model' => PageCategory::class,
             ],

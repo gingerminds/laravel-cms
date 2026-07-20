@@ -41,10 +41,10 @@ class MenuItemController extends AbstractController
         $view = 'gingerminds-cms::pages.menu_items.index';
 
         return view($view, [
-            'resource'  => ResourceResolver::model('menu_item'),
+            'resource' => ResourceResolver::model('menu_item'),
             'rootItems' => $rootItems,
-            'menu'      => $menu,
-            'filters'   => $request->query('filters', []),
+            'menu' => $menu,
+            'filters' => $request->query('filters', []),
         ]);
     }
 
@@ -56,10 +56,10 @@ class MenuItemController extends AbstractController
         $site = app(SiteContext::class)->site();
 
         return view($view, [
-            'menu'            => $menu,
+            'menu' => $menu,
             'defaultLanguage' => $site?->defaultLanguage()->first(),
-            'languages'       => $site?->languages,
-            'menuItems'       => $this->menuItemRepository->get($request),
+            'languages' => $site?->languages,
+            'menuItems' => $this->menuItemRepository->get($request),
         ]);
     }
 
@@ -71,10 +71,10 @@ class MenuItemController extends AbstractController
         $site = app(SiteContext::class)->site();
 
         return view($view, [
-            'menuItem'        => $menuItem,
+            'menuItem' => $menuItem,
             'defaultLanguage' => $site?->defaultLanguage()->first(),
-            'languages'       => $site?->languages,
-            'menuItems'       => $this->menuItemRepository->get($request),
+            'languages' => $site?->languages,
+            'menuItems' => $this->menuItemRepository->get($request),
         ]);
     }
 
@@ -108,7 +108,7 @@ class MenuItemController extends AbstractController
         $translation = $menuItem->currentTranslation;
 
         return redirect()->route('gingerminds-cms.menu_items.edit', [
-            'menu'     => $menu->id,
+            'menu' => $menu->id,
             'menuItem' => $menuItem->id,
         ])
             ->with('success', __('gingerminds-core::translation.successfully_updated', [

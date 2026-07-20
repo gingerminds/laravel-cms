@@ -42,38 +42,20 @@ class CreateBlock extends Command
         $name = $this->argument('name');
         $raw  = trim(is_string($name) ? $name : '');
 
-        if ($raw === '') {
-            $this->error('Name is required.');
-            return Command::FAILURE;
-        }
-
-        $class = Str::studly($raw);
-
-        if (!preg_match('/^[A-Z][A-Za-z0-9]*$/', $class)) {
-            $this->error("\"{$raw}\" can't be turned into a valid class name.");
-            return Command::FAILURE;
-        }
-
-        $classPath = app_path("Cms/Blocks/{$class}.php");
-
-        if (file_exists($classPath)) {
-            $this->error("Block already exists: {$classPath}");
-            return Command::FAILURE;
-        }
-
         // The key isn't asked for: it's derived from the class name, same
         // convention as every block shipped in this package (TitleText ->
         // title_text), so there's only one name to pick per block, not two
-        // that can drift apart.
-        $key = Str::snake($class);
+        // that can drift apart. Deriving these unconditionally (rather than
+        // only once earlier checks pass) is what lets validationError()
+        // below collapse every early-exit check into one lookup.
+        $class     = Str::studly($raw);
+        $classPath = app_path("Cms/Blocks/{$class}.php");
+        $key       = Str::snake($class);
 
-        $collision = $this->findKeyCollision($key);
+        $error = $this->validationError($raw, $class, $classPath, $key);
 
-        if ($collision instanceof BlockInterface) {
-            $this->error(
-                "Key \"{$key}\" is already used by " . $collision::class . '. ' .
-                "Two blocks can't share the same key — pick another class name."
-            );
+        if ($error !== null) {
+            $this->error($error);
             return Command::FAILURE;
         }
 
@@ -87,11 +69,31 @@ class CreateBlock extends Command
         $this->info("Preview view created: {$previewPath}");
         $this->line('');
         $this->line(
-            "Next: edit fields() in {$class}.php 
+            "Next: edit fields() in {$class}.php
         — it'll show up in the block picker on its own, no registration needed."
         );
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * Every safety check `handle()` used to inline as its own early return
+     * — same validity/collision checks, just expressed as one lookup so
+     * the command itself only needs the two returns success/failure
+     * actually require.
+     */
+    private function validationError(string $raw, string $class, string $classPath, string $key): ?string
+    {
+        $collision = $this->findKeyCollision($key);
+
+        return match (true) {
+            $raw === '' => 'Name is required.',
+            !preg_match('/^[A-Z][A-Za-z0-9]*$/', $class) => "\"{$raw}\" can't be turned into a valid class name.",
+            file_exists($classPath) => "Block already exists: {$classPath}",
+            $collision instanceof BlockInterface => "Key \"{$key}\" is already used by " . $collision::class . '. ' .
+                    "Two blocks can't share the same key — pick another class name.",
+            default => null,
+        };
     }
 
     /**

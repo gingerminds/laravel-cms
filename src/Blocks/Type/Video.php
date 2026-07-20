@@ -36,18 +36,18 @@ class Video extends AbstractBlock
     {
         return [
             [
-                'name'     => 'title',
-                'type'     => 'text',
-                'label'    => __('gingerminds-cms::translation.blocks.title_text.fields.title'),
+                'name' => 'title',
+                'type' => 'text',
+                'label' => __('gingerminds-cms::translation.blocks.title_text.fields.title'),
                 'required' => false,
-                'size'     => 'md',
+                'size' => 'md',
             ],
             [
-                'name'     => 'embed_code',
-                'type'     => 'text',
-                'label'    => __('gingerminds-cms::translation.blocks.video.fields.embed_code'),
+                'name' => 'embed_code',
+                'type' => 'text',
+                'label' => __('gingerminds-cms::translation.blocks.video.fields.embed_code'),
                 'required' => true,
-                'size'     => 'md',
+                'size' => 'md',
             ],
         ];
     }

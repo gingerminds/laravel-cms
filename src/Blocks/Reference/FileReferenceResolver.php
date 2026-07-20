@@ -35,13 +35,13 @@ class FileReferenceResolver implements ReferenceFieldResolver
         }
 
         return [
-            'id'            => (string) $loaded->id,
-            'url'           => "/api/files/{$loaded->id}",
+            'id' => (string) $loaded->id,
+            'url' => "/api/files/{$loaded->id}",
             'thumbnail_url' => $loaded->isImage() ? "/api/files/{$loaded->id}/thumbnail" : null,
-            'mime_type'     => $loaded->mime_type,
+            'mime_type' => $loaded->mime_type,
             'original_name' => $loaded->original_name,
-            'size'          => $loaded->size,
-            'is_image'      => $loaded->isImage(),
+            'size' => $loaded->size,
+            'is_image' => $loaded->isImage(),
         ];
     }
 }

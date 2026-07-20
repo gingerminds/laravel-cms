@@ -152,7 +152,9 @@ function openBlockForm(canvas, key, item) {
     if (!modalEl || !body) return;
 
     body.replaceChildren(buildLoading());
-    if (label) label.textContent = '';
+    // Keep a non-empty, translated placeholder rather than clearing the
+    // heading — an empty <h5> has no content for screen readers to announce.
+    if (label) label.textContent = window.cmsBlocksConfig?.loadingMessage || 'Chargement…';
 
     let url = (window.cmsBlocksConfig?.formUrlTemplate || '').replace('__KEY__', encodeURIComponent(key));
 

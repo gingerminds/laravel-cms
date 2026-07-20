@@ -40,19 +40,19 @@ class Media extends AbstractBlock
     {
         return [
             [
-                'name'     => 'title',
-                'type'     => 'text',
-                'label'    => __('gingerminds-cms::translation.blocks.title_text.fields.title'),
+                'name' => 'title',
+                'type' => 'text',
+                'label' => __('gingerminds-cms::translation.blocks.title_text.fields.title'),
                 'required' => true,
-                'size'     => 'md',
+                'size' => 'md',
             ],
             [
-                'name'     => 'file',
-                'type'     => 'file',
-                'label'    => __('gingerminds-cms::translation.blocks.media.fields.file'),
+                'name' => 'file',
+                'type' => 'file',
+                'label' => __('gingerminds-cms::translation.blocks.media.fields.file'),
                 'required' => true,
-                'size'     => 'xl',
-                'mimes'    => null,
+                'size' => 'xl',
+                'mimes' => null,
             ],
         ];
     }

@@ -36,20 +36,20 @@ class TitleText extends AbstractBlock
     {
         return [
             [
-                'name'     => 'title',
-                'type'     => 'text',
-                'label'    => __('gingerminds-cms::translation.blocks.title_text.fields.title'),
+                'name' => 'title',
+                'type' => 'text',
+                'label' => __('gingerminds-cms::translation.blocks.title_text.fields.title'),
                 'required' => true,
-                'size'     => 'md',
+                'size' => 'md',
             ],
             [
-                'name'     => 'text',
-                'type'     => 'wysiwyg',
-                'label'    => __('gingerminds-cms::translation.blocks.title_text.fields.text'),
+                'name' => 'text',
+                'type' => 'wysiwyg',
+                'label' => __('gingerminds-cms::translation.blocks.title_text.fields.text'),
                 'required' => false,
-                'size'     => 'xl',
-                'preset'   => 'default',
-                'rows'     => 8,
+                'size' => 'xl',
+                'preset' => 'default',
+                'rows' => 8,
             ],
         ];
     }

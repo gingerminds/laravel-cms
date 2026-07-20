@@ -44,9 +44,9 @@ class BlockFieldValidator
         $rules[] = match (true) {
             $type === 'select' => 'string',
             $type === 'toggle' => 'boolean',
-            $isMultipleMedia   => 'array',
-            $type === 'media'  => 'integer',
-            default            => 'string',
+            $isMultipleMedia => 'array',
+            $type === 'media' => 'integer',
+            default => 'string',
         };
 
         if ($type === 'select' && !empty($field['options'])) {
@@ -72,33 +72,47 @@ class BlockFieldValidator
         $mimes = array_key_exists('mimes', $field) ? $field['mimes'] : ['image/*'];
         $mimes = empty($mimes) ? null : (array) $mimes;
 
-        $rules   = [$required ? 'required' : 'nullable'];
+        $rules = [$required ? 'required' : 'nullable'];
+        // $attribute is required by Laravel's closure-rule contract (it's
+        // called positionally as ($attribute, $value, $fail)) but unused
+        // here: $fail() already substitutes ":attribute" using it under the
+        // hood, so there's nothing left for this closure's own body to do
+        // with it. NOSONAR: dropping it would shift $value/$fail into the
+        // wrong argument slots instead of actually removing anything.
         $rules[] = static function (string $attribute, mixed $value, Closure $fail) use ($maxKb, $mimes): void {
-            if ($value === null || $value === '' || is_string($value)) {
-                return;
-            }
+            // NOSONAR
+            $error = self::fileError($value, $mimes, $maxKb);
 
-            if (!$value instanceof UploadedFile) {
-                $fail('The :attribute must be a file.');
-                return;
-            }
-
-            if (!$value->isValid()) {
-                $fail('The :attribute failed to upload.');
-                return;
-            }
-
-            if ($mimes !== null && !self::mimeMatches((string) $value->getMimeType(), $mimes)) {
-                $fail('The :attribute must be a file of type: ' . implode(', ', $mimes) . '.');
-                return;
-            }
-
-            if ($value->getSize() > $maxKb * 1024) {
-                $fail("The :attribute must not be greater than {$maxKb} kilobytes.");
+            if ($error !== null) {
+                $fail($error);
             }
         };
 
         return array_merge($rules, $field['rules'] ?? []);
+    }
+
+    /**
+     * All the file-upload checks `fileRules()`'s closure needs, collapsed
+     * into a single result instead of `$fail()`-and-return per case — kept
+     * separate mainly so that closure itself stays a trivial one-branch
+     * wrapper.
+     *
+     * @param array<int, string>|null $mimes
+     */
+    private static function fileError(mixed $value, ?array $mimes, int $maxKb): ?string
+    {
+        if ($value === null || $value === '' || is_string($value)) {
+            return null;
+        }
+
+        return match (true) {
+            !$value instanceof UploadedFile => 'The :attribute must be a file.',
+            !$value->isValid() => 'The :attribute failed to upload.',
+            $mimes !== null && !self::mimeMatches((string) $value->getMimeType(), $mimes) =>
+                'The :attribute must be a file of type: ' . implode(', ', $mimes) . '.',
+            $value->getSize() > $maxKb * 1024 => "The :attribute must not be greater than {$maxKb} kilobytes.",
+            default => null,
+        };
     }
 
     /**

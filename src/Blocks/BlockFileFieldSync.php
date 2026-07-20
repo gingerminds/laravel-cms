@@ -39,57 +39,79 @@ class BlockFileFieldSync
             $type = $field['type'] ?? null;
 
             if ($type === 'repeater') {
-                $rows = is_array($data[$name] ?? null) ? $data[$name] : [];
-
-                foreach ($rows as $index => $row) {
-                    if (!is_array($row)) {
-                        continue;
-                    }
-
-                    $rows[$index] = self::syncFields(
-                        $field['fields'] ?? [],
-                        $request,
-                        $row,
-                        "$prefix.$name.$index",
-                        $uploadService,
-                    );
-                }
-
-                $data[$name] = $rows;
+                $data[$name] = self::syncRepeaterRows($field, $request, $data[$name] ?? null, $prefix, $uploadService);
                 continue;
             }
 
-            if ($type !== 'file') {
-                continue;
-            }
-
-            $inputKey = "$prefix.$name";
-
-            /** @var UploadedFile|null $uploaded */
-            $uploaded = $request->file($inputKey);
-
-            $oldId = $request->input($inputKey);
-            $old   = is_string($oldId) && $oldId !== '' ? File::query()->find($oldId) : null;
-
-            if ($uploaded instanceof UploadedFile) {
-                $data[$name] = $uploadService->replace($uploaded, $old, self::UPLOAD_FOLDER)->id;
-
-                continue;
-            }
-
-            if ($request->boolean("{$inputKey}_remove")) {
-                $uploadService->delete($old);
-                $data[$name] = null;
-
-                continue;
-            }
-
-            if (($data[$name] ?? null) === '') {
-                $data[$name] = null;
+            if ($type === 'file') {
+                $data[$name] = self::syncFileField($request, $data[$name] ?? null, "$prefix.$name", $uploadService);
             }
         }
 
         return $data;
+    }
+
+    /**
+     * One level of `syncFields()`'s repeater branch, split out purely to
+     * keep both functions' cognitive complexity down — the loop-inside-a-
+     * loop-inside-an-if shape was what pushed the original over budget, not
+     * any of the logic itself.
+     *
+     * @param array<string, mixed> $field
+     * @return array<int, mixed>
+     */
+    private static function syncRepeaterRows(
+        array $field,
+        Request $request,
+        mixed $rows,
+        string $prefix,
+        FileUploadService $uploadService,
+    ): array {
+        $rows = is_array($rows) ? $rows : [];
+
+        foreach ($rows as $index => $row) {
+            if (is_array($row)) {
+                $rows[$index] = self::syncFields(
+                    $field['fields'] ?? [],
+                    $request,
+                    $row,
+                    "$prefix.{$field['name']}.$index",
+                    $uploadService,
+                );
+            }
+        }
+
+        return $rows;
+    }
+
+    /**
+     * `syncFields()`'s `file`-type branch: upload a new file, honor an
+     * explicit "remove" flag, or fall back to whatever was already there
+     * (normalizing an empty-string value to `null`).
+     */
+    private static function syncFileField(
+        Request $request,
+        mixed $currentValue,
+        string $inputKey,
+        FileUploadService $uploadService,
+    ): mixed {
+        /** @var UploadedFile|null $uploaded */
+        $uploaded = $request->file($inputKey);
+
+        $oldId = $request->input($inputKey);
+        $old   = is_string($oldId) && $oldId !== '' ? File::query()->find($oldId) : null;
+
+        if ($uploaded instanceof UploadedFile) {
+            return $uploadService->replace($uploaded, $old, self::UPLOAD_FOLDER)->id;
+        }
+
+        if ($request->boolean("{$inputKey}_remove")) {
+            $uploadService->delete($old);
+
+            return null;
+        }
+
+        return $currentValue === '' ? null : $currentValue;
     }
 
     /**
@@ -168,12 +190,30 @@ class BlockFileFieldSync
                 continue;
             }
 
-            if ($type === 'repeater' && is_array($data[$name] ?? null)) {
-                foreach ($data[$name] as $row) {
-                    if (is_array($row)) {
-                        array_push($ids, ...self::collectFieldFileIds($field['fields'] ?? [], $row));
-                    }
-                }
+            if ($type === 'repeater') {
+                array_push($ids, ...self::collectRepeaterFileIds($field['fields'] ?? [], $data[$name] ?? null));
+            }
+        }
+
+        return $ids;
+    }
+
+    /**
+     * `collectFieldFileIds()`'s repeater branch, split out for the same
+     * reason as `syncRepeaterRows()` above — a loop nested inside another
+     * loop's `if` is exactly the shape that drives cognitive complexity up
+     * fastest, regardless of how simple the body is.
+     *
+     * @param array<int, array<string, mixed>> $fields
+     * @return list<string>
+     */
+    private static function collectRepeaterFileIds(array $fields, mixed $rows): array
+    {
+        $ids = [];
+
+        foreach ((is_array($rows) ? $rows : []) as $row) {
+            if (is_array($row)) {
+                array_push($ids, ...self::collectFieldFileIds($fields, $row));
             }
         }
 

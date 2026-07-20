@@ -128,8 +128,11 @@ function performCopyStructure(sourceCanvas, targetCanvas) {
                 data.uid = newUid;
                 script.textContent = JSON.stringify(data);
             } catch (e) {
-                // Leave it — readBlockData() already falls back to
-                // dataset-derived values if this ever fails to parse.
+                // Leave the script tag's stale JSON as-is — readBlockData()
+                // already falls back to dataset-derived values if this ever
+                // fails to parse. Still surfaced so a real corruption case
+                // doesn't silently vanish.
+                console.warn('copy-structure: failed to re-tag cloned block data with new uid', e);
             }
         }
 

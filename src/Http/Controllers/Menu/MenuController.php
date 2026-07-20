@@ -32,7 +32,7 @@ class MenuController extends AbstractController
 
         return view($view, [
             'resource' => ResourceResolver::model('menu'),
-            'items'    => $items,
+            'items' => $items,
         ]);
     }
 

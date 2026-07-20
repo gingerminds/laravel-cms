@@ -27,7 +27,7 @@ class PageCategoryRequest extends FormRequest implements FormRequestInterface
         $siteId   = app(SiteContext::class)->site()?->id;
 
         $rules = [
-            'code'      => $this->codeRules($siteId, $category),
+            'code' => $this->codeRules($siteId, $category),
             'parent_id' => $this->parentIdRules($siteId, $category),
             'is_unique' => ['nullable', 'boolean'],
         ];
@@ -160,7 +160,7 @@ class PageCategoryRequest extends FormRequest implements FormRequestInterface
         ];
 
         return $attributes + $this->translationAttributes([
-            'name'   => __('gingerminds-cms::translation.page_categories.form.name'),
+            'name' => __('gingerminds-cms::translation.page_categories.form.name'),
             'prefix' => __('gingerminds-cms::translation.page_categories.form.prefix'),
         ]);
     }
