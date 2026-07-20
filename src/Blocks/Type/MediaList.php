@@ -45,38 +45,21 @@ class MediaList extends AbstractBlock
     public function fields(): array
     {
         return [
-            [
-                'name' => 'title',
-                'type' => 'text',
-                'label' => __('gingerminds-cms::translation.blocks.media_list.fields.title'),
-                'required' => false,
-                'size' => 'md',
-            ],
-            [
-                'name' => 'items',
-                'type' => 'repeater',
-                'label' => __('gingerminds-cms::translation.blocks.media_list.fields.items'),
-                'required' => false,
-                'default' => [],
-                'add_label' => __('gingerminds-cms::translation.blocks.media_list.fields.add_item'),
-                'item_label' => __('gingerminds-cms::translation.blocks.media_list.fields.item_label'),
-                'fields' => [
-                    [
-                        'name' => 'media',
-                        'type' => 'media',
-                        'label' => __('gingerminds-cms::translation.blocks.media_list.fields.media'),
-                        'required' => true,
-                        'size' => 'md',
-                    ],
-                    [
-                        'name' => 'subtitle',
-                        'type' => 'text',
-                        'label' => __('gingerminds-cms::translation.blocks.media_list.fields.subtitle'),
-                        'required' => false,
-                        'size' => 'md',
-                    ],
+            $this->textField('title', __('gingerminds-cms::translation.blocks.media_list.fields.title')),
+            $this->repeaterField(
+                'items',
+                __('gingerminds-cms::translation.blocks.media_list.fields.items'),
+                [
+                    $this->mediaField(
+                        'media',
+                        __('gingerminds-cms::translation.blocks.media_list.fields.media'),
+                        required: true,
+                    ),
+                    $this->textField('subtitle', __('gingerminds-cms::translation.blocks.media_list.fields.subtitle')),
                 ],
-            ],
+                __('gingerminds-cms::translation.blocks.media_list.fields.add_item'),
+                __('gingerminds-cms::translation.blocks.media_list.fields.item_label'),
+            ),
         ];
     }
 

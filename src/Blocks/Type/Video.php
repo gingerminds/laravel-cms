@@ -35,20 +35,17 @@ class Video extends AbstractBlock
     public function fields(): array
     {
         return [
-            [
-                'name' => 'title',
-                'type' => 'text',
-                'label' => __('gingerminds-cms::translation.blocks.title_text.fields.title'),
-                'required' => false,
-                'size' => 'md',
-            ],
-            [
-                'name' => 'embed_code',
-                'type' => 'text',
-                'label' => __('gingerminds-cms::translation.blocks.video.fields.embed_code'),
-                'required' => true,
-                'size' => 'md',
-            ],
+            // Was pointing at `title_text.fields.title` (copy-paste leftover
+            // from that reference block) — harmless today since both keys
+            // happen to translate to the same "Titre"/"Title", but wrong
+            // and would silently ignore a future edit to this block's own
+            // key. See resources/lang/*/translation.php's `video.fields.title`.
+            $this->textField('title', __('gingerminds-cms::translation.blocks.video.fields.title')),
+            $this->textField(
+                'embed_code',
+                __('gingerminds-cms::translation.blocks.video.fields.embed_code'),
+                required: true,
+            ),
         ];
     }
 

@@ -38,54 +38,26 @@ class Cards extends AbstractBlock
     public function fields(): array
     {
         return [
-            [
-                'name' => 'title',
-                'type' => 'text',
-                'label' => __('gingerminds-cms::translation.blocks.cards.fields.title'),
-                'required' => true,
-                'size' => 'md',
-            ],
-            [
-                'name' => 'text',
-                'type' => 'wysiwyg',
-                'label' => __('gingerminds-cms::translation.blocks.cards.fields.text'),
-                'required' => false,
-                'size' => 'xl',
-                'preset' => 'default',
-                'rows' => 6,
-            ],
-            [
-                'name' => 'cards',
-                'type' => 'repeater',
-                'label' => __('gingerminds-cms::translation.blocks.cards.fields.cards'),
-                'required' => false,
-                'default' => [],
-                'add_label' => __('gingerminds-cms::translation.blocks.cards.fields.add_card'),
-                'item_label' => __('gingerminds-cms::translation.blocks.cards.fields.card_item_label'),
-                'fields' => [
-                    [
-                        'name' => 'title',
-                        'type' => 'text',
-                        'label' => __('gingerminds-cms::translation.blocks.cards.fields.card_title'),
-                        'required' => false,
-                        'size' => 'md',
-                    ],
-                    [
-                        'name' => 'description',
-                        'type' => 'textarea',
-                        'label' => __('gingerminds-cms::translation.blocks.cards.fields.card_description'),
-                        'required' => false,
-                        'size' => 'xl',
-                    ],
-                    [
-                        'name' => 'image',
-                        'type' => 'file',
-                        'label' => __('gingerminds-cms::translation.blocks.cards.fields.card_image'),
-                        'required' => true,
-                        'size' => 'md',
-                    ],
+            $this->textField('title', __('gingerminds-cms::translation.blocks.cards.fields.title'), required: true),
+            $this->wysiwygField('text', __('gingerminds-cms::translation.blocks.cards.fields.text'), rows: 6),
+            $this->repeaterField(
+                'cards',
+                __('gingerminds-cms::translation.blocks.cards.fields.cards'),
+                [
+                    $this->textField('title', __('gingerminds-cms::translation.blocks.cards.fields.card_title')),
+                    $this->textareaField(
+                        'description',
+                        __('gingerminds-cms::translation.blocks.cards.fields.card_description'),
+                    ),
+                    $this->fileField(
+                        'image',
+                        __('gingerminds-cms::translation.blocks.cards.fields.card_image'),
+                        required: true,
+                    ),
                 ],
-            ],
+                __('gingerminds-cms::translation.blocks.cards.fields.add_card'),
+                __('gingerminds-cms::translation.blocks.cards.fields.card_item_label'),
+            ),
         ];
     }
 

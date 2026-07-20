@@ -39,21 +39,16 @@ class Media extends AbstractBlock
     public function fields(): array
     {
         return [
-            [
-                'name' => 'title',
-                'type' => 'text',
-                'label' => __('gingerminds-cms::translation.blocks.title_text.fields.title'),
-                'required' => true,
-                'size' => 'md',
-            ],
-            [
-                'name' => 'file',
-                'type' => 'file',
-                'label' => __('gingerminds-cms::translation.blocks.media.fields.file'),
-                'required' => true,
-                'size' => 'xl',
-                'mimes' => null,
-            ],
+            // Same "pointing at title_text's key instead of its own" slip
+            // as Video::fields() — see that file's comment.
+            $this->textField('title', __('gingerminds-cms::translation.blocks.media.fields.title'), required: true),
+            $this->fileField(
+                'file',
+                __('gingerminds-cms::translation.blocks.media.fields.file'),
+                required: true,
+                size: 'xl',
+                extra: ['mimes' => null],
+            ),
         ];
     }
 
