@@ -314,7 +314,7 @@ function initWysiwyg(container) {
         },
     });
 
-    buildToolbar(toolbarEl, editor, extensionNames);
+    buildToolbar(toolbarEl, editor, extensionNames, labels);
 
     // Le min-height doit être sur le ProseMirror (contenteditable) et non sur le wrapper
     // pour que toute la zone soit cliquable
