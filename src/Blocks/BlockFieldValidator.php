@@ -195,6 +195,17 @@ class BlockFieldValidator
         return $data;
     }
 
+    /**
+     * Coerces a toggle field's value to a real PHP bool. Browsers submit
+     * `"1"`/`"0"` strings (see `<x-gingerminds-core::form.inputs.toggle>`'s
+     * hidden-input + checkbox pair), and Laravel's `boolean` validation rule
+     * — `rulesForField()`'s rule for `type === 'toggle'` — only *validates*
+     * that shape, it never casts it, so without this a toggle survives as a
+     * string/int all the way to the API. Shared by `sanitizeDataForBlock()`
+     * (write time, new/re-saved blocks) and `ContentReferenceResolver`
+     * (read time, so blocks saved before this existed self-heal on every
+     * read instead of staying wrong until next edited).
+     */
     public static function toBool(mixed $value): bool
     {
         return filter_var($value, FILTER_VALIDATE_BOOLEAN);
