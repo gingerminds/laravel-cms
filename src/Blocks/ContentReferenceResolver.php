@@ -70,6 +70,10 @@ class ContentReferenceResolver
                 continue;
             }
 
+            if ($type === 'toggle' && array_key_exists($name, $data)) {
+                $data[$name] = BlockFieldValidator::toBool($data[$name]);
+            }
+
             if (!isset($resolvers[$type]) || !array_key_exists($name, $data)) {
                 continue;
             }

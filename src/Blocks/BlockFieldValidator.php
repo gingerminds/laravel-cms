@@ -183,12 +183,21 @@ class BlockFieldValidator
                 $data[$name] = null;
             }
 
+            if ($type === 'toggle' && array_key_exists($name, $data)) {
+                $data[$name] = self::toBool($data[$name]);
+            }
+
             if ($type === 'repeater' && is_array($data[$name] ?? null)) {
                 $data[$name] = self::sanitizeRepeaterRows($field['fields'] ?? [], $data[$name]);
             }
         }
 
         return $data;
+    }
+
+    public static function toBool(mixed $value): bool
+    {
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN);
     }
 
     /**
@@ -213,6 +222,10 @@ class BlockFieldValidator
 
                 if (($isUnsetSingleMedia || $subType === 'file') && ($row[$subName] ?? null) === '') {
                     $row[$subName] = null;
+                }
+
+                if ($subType === 'toggle' && array_key_exists($subName, $row)) {
+                    $row[$subName] = self::toBool($row[$subName]);
                 }
             }
 
