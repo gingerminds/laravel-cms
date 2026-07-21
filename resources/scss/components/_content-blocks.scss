@@ -100,6 +100,57 @@
     color: var(--bs-primary);
 }
 
+/* Icon-in-badge alignment (e.g. media-list's "Filterable by country" tag).
+   Bootstrap Icons ships `.bi::before { vertical-align: -.125em }` to nudge
+   the glyph to sit on the text baseline in normal inline flow, and relies
+   on the icon font's own ascent/descent metrics for that — neither plays
+   nicely with `align-items: center` on the badge (`d-inline-flex`), which
+   only centers the icon's *box*, not necessarily the glyph within it.
+   Turning the icon itself into a (nested) flex container sidesteps both:
+   its `::before` glyph becomes a flex item and gets centered geometrically,
+   independent of font baseline metrics. */
+.cms-block-preview .badge.d-inline-flex .bi {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    &::before {
+        vertical-align: 0;
+    }
+}
+
+/* Tables inserted via the wysiwyg "table" extension (see wysiwyg.js) render
+   here as plain HTML — same border/header treatment as the editor itself
+   (_wysiwyg.scss), so a table doesn't lose its borders the moment it leaves
+   the ProseMirror contenteditable. */
+.cms-block-preview-text table {
+    border-collapse: collapse;
+    table-layout: fixed;
+    width: 100%;
+    margin: 0.5rem 0;
+
+    td,
+    th {
+        border: 1px solid #adb5bd;
+        padding: 0.375rem 0.5rem;
+        vertical-align: top;
+    }
+
+    th {
+        background-color: #f1f3f5;
+        font-weight: 600;
+        text-align: left;
+    }
+
+    // Cells hold inline content directly going forward (see wysiwyg.js's
+    // TableCell/TableHeader override) — this only matters for content saved
+    // before that change, still carrying a <p> wrapper.
+    td > p,
+    th > p {
+        margin: 0;
+    }
+}
+
 /* Repeater fields (see docs/Blocks.md, partials/repeater*.blade.php) — a
    card's own form is collapsible so a block with several of them doesn't
    dump every field of every row on the contributor at once. */

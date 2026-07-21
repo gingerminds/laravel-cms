@@ -41,22 +41,27 @@ php artisan migrate
 
 Creates `menus`, `menu_items`, `menu_item_translations`, `pages`, `page_translations`, `page_categories`, `page_category_translations`, and `page_urls` (a precomputed per-language URL index kept in sync automatically — see [Pages](./Pages.md#pageurl)). Note there is no `menu_translations` table — only `MenuItem` is translatable, `Menu` itself is not.
 
-## 5. Publish the JS assets
+## 5. Publish the JS/SCSS assets
 
-This package ships no SCSS, only the WYSIWYG editor's JS. Publish it the same way as `laravel-media-manager`'s assets:
+Publish the same way as `laravel-media-manager`'s assets:
 
 ```bash
 php artisan vendor:publish --tag=gingerminds-assets
 ```
 
-This copies `resources/js` → `resources/js/vendor/gingerminds-cms`. Then import it from your own entry point:
+This copies `resources/js` → `resources/js/vendor/gingerminds-cms` and `resources/scss` → `resources/scss/vendor/gingerminds-cms`. Then import both from your own entry points:
 
 ```js
 // resources/js/app.js
 import './vendor/gingerminds-cms/app.js';
 ```
 
-As with any published assets, this is a plain file copy (not a symlink) — re-running `vendor:publish` overwrites local edits, and updating the package requires re-publishing and rebuilding to pick up JS changes.
+```scss
+// resources/scss/app.scss
+@import './vendor/gingerminds-cms/app';
+```
+
+As with any published assets, this is a plain file copy (not a symlink) — re-running `vendor:publish` overwrites local edits, and updating the package requires re-publishing and rebuilding to pick up JS/SCSS changes.
 
 > Note: `--tag=gingerminds-assets` is shared with `laravel-media-manager` — running it publishes both packages' assets (JS and SCSS) in one go if both are installed.
 
