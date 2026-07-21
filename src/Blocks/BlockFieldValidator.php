@@ -183,12 +183,32 @@ class BlockFieldValidator
                 $data[$name] = null;
             }
 
+            if ($type === 'toggle' && array_key_exists($name, $data)) {
+                $data[$name] = self::toBool($data[$name]);
+            }
+
             if ($type === 'repeater' && is_array($data[$name] ?? null)) {
                 $data[$name] = self::sanitizeRepeaterRows($field['fields'] ?? [], $data[$name]);
             }
         }
 
         return $data;
+    }
+
+    /**
+     * Coerces a toggle field's value to a real PHP bool. Browsers submit
+     * `"1"`/`"0"` strings (see `<x-gingerminds-core::form.inputs.toggle>`'s
+     * hidden-input + checkbox pair), and Laravel's `boolean` validation rule
+     * — `rulesForField()`'s rule for `type === 'toggle'` — only *validates*
+     * that shape, it never casts it, so without this a toggle survives as a
+     * string/int all the way to the API. Shared by `sanitizeDataForBlock()`
+     * (write time, new/re-saved blocks) and `ContentReferenceResolver`
+     * (read time, so blocks saved before this existed self-heal on every
+     * read instead of staying wrong until next edited).
+     */
+    public static function toBool(mixed $value): bool
+    {
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN);
     }
 
     /**
@@ -213,6 +233,10 @@ class BlockFieldValidator
 
                 if (($isUnsetSingleMedia || $subType === 'file') && ($row[$subName] ?? null) === '') {
                     $row[$subName] = null;
+                }
+
+                if ($subType === 'toggle' && array_key_exists($subName, $row)) {
+                    $row[$subName] = self::toBool($row[$subName]);
                 }
             }
 
