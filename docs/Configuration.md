@@ -14,7 +14,7 @@ Published to `config/gingerminds-cms.php` (see [Installation](./Installation.md)
 ],
 ```
 
-Each preset is a named list of TipTap extensions to enable, which controls both which toolbar buttons are shown and which formatting the editor accepts. Used via the `preset` prop of the [WYSIWYG component](./Components.md). Add your own presets freely — for example, a project that only ever needs bold text might add:
+Each preset is a named list of TipTap extensions to enable, which controls both which toolbar buttons are shown and which formatting the editor accepts. Available extension names: `bold`, `italic`, `underline`, `strike`, `link`, `bulletList`, `orderedList`, `heading`, `blockquote`, `horizontalRule`, `table`, `history`. Used via the `preset` prop of the [WYSIWYG component](./Components.md). Add your own presets freely — for example, a project that only ever needs bold text might add:
 
 ```php
 'presets' => [

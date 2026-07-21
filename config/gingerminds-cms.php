@@ -31,6 +31,9 @@ return [
             'default' => [
                 'extensions' => ['bold', 'italic', 'underline', 'strike', 'link', 'bulletList', 'orderedList', 'history'],
             ],
+            'extended' => [
+                'extensions' => ['bold', 'italic', 'underline', 'strike', 'link', 'bulletList', 'orderedList', 'table', 'history'],
+            ],
             'minimal' => [
                 'extensions' => ['bold', 'italic', 'underline', 'link'],
             ],

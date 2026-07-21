@@ -36,7 +36,7 @@ class TitleText extends AbstractBlock
     {
         return [
             $this->textField('title', $this->fieldLabel('title'), required: true),
-            $this->wysiwygField('text', $this->fieldLabel('text')),
+            $this->wysiwygField('text', $this->fieldLabel('text'), extra: ['preset' => 'extended']),
         ];
     }
 
