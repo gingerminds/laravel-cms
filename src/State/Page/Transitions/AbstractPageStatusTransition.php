@@ -4,29 +4,41 @@ declare(strict_types=1);
 
 namespace Gingerminds\LaravelCms\State\Page\Transitions;
 
-use Gingerminds\LaravelCms\Models\Page\Page;
+use Gingerminds\LaravelCms\State\Page\Contract\HasStatusPropertyContract;
 use Gingerminds\LaravelCms\State\Page\StatusState;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Spatie\ModelStates\Transition;
 
+/**
+ * Named after `Page` for historical reasons, but generic on purpose:
+ * `StatusState` (and this whole transition set) is shared by any model
+ * that casts a `status` column to it — `Gingerminds\LaravelCms\Models\Page\Page`
+ * and `App\Models\Event\Event` (in the yanmar-extranet project) both do.
+ * Nothing below needs more than plain Eloquent attribute get/set + `save()`,
+ * so a bare `Model` is both correct and enough.
+ */
 abstract class AbstractPageStatusTransition extends Transition
 {
     public function __construct(
-        protected readonly Page $page,
+        protected readonly Model $page,
     ) {
     }
 
-    public function handle(): Page
+    public function handle(): Model
     {
-        $this->page->status = $this->targetState();
+        /** @var HasStatusPropertyContract $page */
+        $page = $this->page;
+
+        $page->status = $this->targetState();
 
         foreach ($this->timestamps() as $attribute => $value) {
-            $this->page->{$attribute} = $value;
+            $page->{$attribute} = $value;
         }
 
-        $this->page->save();
+        $page->save();
 
-        return $this->page;
+        return $page;
     }
 
     abstract protected function targetState(): StatusState;

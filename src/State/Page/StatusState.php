@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Gingerminds\LaravelCms\State\Page;
 
-use Gingerminds\LaravelCms\Models\Page\Page;
 use Gingerminds\LaravelCms\State\Page\Status\Archived;
 use Gingerminds\LaravelCms\State\Page\Status\Draft;
 use Gingerminds\LaravelCms\State\Page\Status\Published;
@@ -12,12 +11,18 @@ use Gingerminds\LaravelCms\State\Page\Transitions\ArchivedToDraft;
 use Gingerminds\LaravelCms\State\Page\Transitions\DraftToPublished;
 use Gingerminds\LaravelCms\State\Page\Transitions\PublishedToArchived;
 use Gingerminds\LaravelCms\State\Page\Transitions\PublishedToDraft;
+use Illuminate\Database\Eloquent\Model;
 use JsonSerializable;
 use Spatie\ModelStates\State;
 use Spatie\ModelStates\StateConfig;
 
 /**
- * @extends State<Page>
+ * Reused as-is by any model that casts its `status` column to it — not just
+ * `Page` (see `Gingerminds\LaravelCms\State\Page\Transitions\AbstractPageStatusTransition`'s
+ * docblock for why that's safe: the whole transition set only ever needs
+ * plain Eloquent Model behavior).
+ *
+ * @extends State<Model>
  */
 abstract class StatusState extends State implements JsonSerializable
 {

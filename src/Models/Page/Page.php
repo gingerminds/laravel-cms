@@ -8,13 +8,14 @@ use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Link;
 use Gingerminds\LaravelCms\ApiProvider\Page\PageProvider;
-use Gingerminds\LaravelCms\Blocks\ContentReferenceResolver;
 use Gingerminds\LaravelCms\Models\PageCategory\PageCategory;
+use Gingerminds\LaravelCms\Models\Trait\HasMainVisualAndThumbnailTrait;
+use Gingerminds\LaravelCms\Models\Trait\HasResolvedContentTrait;
+use Gingerminds\LaravelCms\Models\Trait\HasStatusLabelTrait;
 use Gingerminds\LaravelCms\State\Page\StatusState;
 use Gingerminds\LaravelCore\Models\FilterableModelInterface;
 use Gingerminds\LaravelCore\Models\ResourceModelInterface;
 use Gingerminds\LaravelCore\Models\SearchableModelInterface;
-use Gingerminds\LaravelMediaManager\Models\File\File;
 use Gingerminds\LaravelMultisite\Models\Site\SiteContextedModelTrait;
 use Gingerminds\LaravelMultisite\Models\Trait\TranslatableModelTrait;
 use Illuminate\Database\Eloquent\Model;
@@ -81,6 +82,7 @@ use Symfony\Component\TypeInfo\TypeIdentifier;
     Page::GROUP_READ,
 ]))]
 #[ApiProperty(property: 'slug', serialize: new Groups([
+    Page::GROUP_LIST,
     Page::GROUP_READ,
 ]))]
 #[ApiProperty(property: 'status_label', serialize: [
@@ -120,7 +122,10 @@ use Symfony\Component\TypeInfo\TypeIdentifier;
 )]
 class Page extends Model implements ResourceModelInterface, FilterableModelInterface, SearchableModelInterface
 {
+    use HasMainVisualAndThumbnailTrait;
+    use HasResolvedContentTrait;
     use HasStates;
+    use HasStatusLabelTrait;
     use SiteContextedModelTrait;
     use TranslatableModelTrait;
 
@@ -159,11 +164,6 @@ class Page extends Model implements ResourceModelInterface, FilterableModelInter
     public function category(): BelongsTo
     {
         return $this->belongsTo(PageCategory::class, 'category_id');
-    }
-
-    public function getStatusLabelAttribute(): string
-    {
-        return $this->status->getMorphClass()::code();
     }
 
     public function getTitleAttribute(): ?string
@@ -208,65 +208,6 @@ class Page extends Model implements ResourceModelInterface, FilterableModelInter
         $translation = $this->currentTranslation;
 
         return $translation?->hook;
-    }
-
-    /**
-     * `file`/`media` type block fields only store a bare id in the raw
-     * `PageTranslation::content` — resolved here into a richer object (url,
-     * mime type, thumbnail...) before being served by the API, sparing the
-     * headless frontend an extra round-trip per referenced file (see
-     * `ContentReferenceResolver`, docs/ContentBlocks.md "Exposition API").
-     * The DB-stored value itself is untouched, only this accessor's output.
-     *
-     * @return array<int, array<string, mixed>>|null
-     */
-    public function getContentAttribute(): ?array
-    {
-        /** @var PageTranslation|null $translation */
-        $translation = $this->currentTranslation;
-
-        return ContentReferenceResolver::resolve($translation?->content);
-    }
-
-    /**
-     * @return BelongsTo<File, $this>
-     */
-    public function mainVisual(): BelongsTo
-    {
-        return $this->belongsTo(File::class, 'main_visual_id');
-    }
-
-    public function getMainVisualFileAttribute(): ?string
-    {
-        /** @var PageTranslation|null $translation */
-        $translation = $this->currentTranslation;
-
-        $fileId = null !== $translation?->main_visual_id
-            ? $translation->mainVisual?->id
-            : $this->getRelationValue('mainVisual')?->id;
-
-        return null !== $fileId ? (string) $fileId : null;
-    }
-
-    /**
-     * @return BelongsTo<File, $this>
-     */
-    public function thumbnail(): BelongsTo
-    {
-        return $this->belongsTo(File::class, 'thumbnail_id');
-    }
-
-    #[SerializedName('thumbnail')]
-    public function getThumbnailFileAttribute(): ?string
-    {
-        /** @var PageTranslation|null $translation */
-        $translation = $this->currentTranslation;
-
-        $fileId = null !== $translation?->thumbnail_id
-            ? $translation->thumbnail?->id
-            : $this->getRelationValue('thumbnail')?->id;
-
-        return null !== $fileId ? (string) $fileId : null;
     }
 
     /**
