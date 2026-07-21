@@ -274,7 +274,7 @@ function refreshToolbar(toolbar, editor) {
 // before parsing so old content loads as a normal table again; multiple
 // paragraphs in one cell collapse to <br>-separated inline content.
 function unwrapTableCellParagraphs(html) {
-    if (!html || !html.includes('<table')) return html;
+    if (!html?.includes('<table')) return html;
 
     const doc = new DOMParser().parseFromString(html, 'text/html');
     doc.querySelectorAll('td, th').forEach((cell) => {
