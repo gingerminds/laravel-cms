@@ -192,4 +192,33 @@ return [
             ],
         ]
     ],
+
+    // Read client-side by resources/js/components/wysiwyg.js (via the
+    // `labels` key merged into `data-wysiwyg-config` — see
+    // wysiwyg.blade.php) — one entry per TOOLBAR_BUTTONS/TABLE_TOOLBAR_NAMES
+    // key in that file, so a new toolbar button needs a matching key here.
+    'wysiwyg' => [
+        'toolbar' => [
+            'bold' => 'Gras',
+            'italic' => 'Italique',
+            'underline' => 'Souligné',
+            'strike' => 'Barré',
+            'link' => 'Lien',
+            'link_prompt' => 'URL :',
+            'bullet_list' => 'Liste à puces',
+            'ordered_list' => 'Liste numérotée',
+            'heading' => 'Titre',
+            'blockquote' => 'Citation',
+            'horizontal_rule' => 'Séparateur',
+            'undo' => 'Annuler',
+            'redo' => 'Rétablir',
+            'insert_table' => 'Insérer un tableau',
+            'toggle_header_row' => "Basculer la ligne d'en-tête",
+            'add_row_after' => 'Ajouter une ligne',
+            'delete_row' => 'Supprimer la ligne',
+            'add_column_after' => 'Ajouter une colonne',
+            'delete_column' => 'Supprimer la colonne',
+            'delete_table' => 'Supprimer le tableau',
+        ],
+    ],
 ];

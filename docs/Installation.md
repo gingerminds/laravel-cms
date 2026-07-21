@@ -67,7 +67,7 @@ As with any published assets, this is a plain file copy (not a symlink) — re-r
 The WYSIWYG editor is built on [TipTap](https://tiptap.dev/). Install its dependencies (and SortableJS, used by the menu item drag-and-drop tree — see [Menus](./Menus.md)):
 
 ```bash
-npm install @tiptap/core@^2.11.5 @tiptap/starter-kit@^2.11.5 @tiptap/extension-link@^2.11.5 @tiptap/extension-underline@^2.11.5 sortablejs@^1.15.7
+npm install @tiptap/core@^2.11.5 @tiptap/starter-kit@^2.11.5 @tiptap/extension-link@^2.11.5 @tiptap/extension-underline@^2.11.5 @tiptap/extension-table@^2.11.5 @tiptap/extension-table-row@^2.11.5 @tiptap/extension-table-header@^2.11.5 @tiptap/extension-table-cell@^2.11.5 sortablejs@^1.15.7
 ```
 
 ## 6. (Optional) Seed permissions

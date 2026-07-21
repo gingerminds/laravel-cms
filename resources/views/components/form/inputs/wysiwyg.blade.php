@@ -20,6 +20,10 @@
     $fieldName = $name ?? $id;
     $presetConfig = config('gingerminds-cms.wysiwyg.presets.' . $preset)
         ?? config('gingerminds-cms.wysiwyg.presets.default');
+    // Toolbar button titles are rendered client-side (wysiwyg.js) — ship the
+    // translated labels alongside the extension list instead of hardcoding
+    // them in JS, see resources/lang/{locale}/translation.php's wysiwyg.toolbar.
+    $presetConfig['labels'] = __('gingerminds-cms::translation.wysiwyg.toolbar');
 @endphp
 
 <div class="{{ $sizeClass }}">
