@@ -68,6 +68,30 @@ A concrete syncer extends it and implements:
 
 The public entry point is `sync(Model $owner): void`; each concrete syncer typically wraps it in its own type-hinted method (`PageUrlSyncer::syncPage(Page $page)`) so callers don't have to pass a bare `Model`. Property access inside the abstract class goes through `getAttribute()`/`getKey()` rather than `->site_id`/`->id` directly, since PHPStan can't resolve dynamic properties through the generic `TOwner`/`TTranslation` template types otherwise.
 
+## Shared traits for Page-like models
+
+`Page` isn't the only resource shaped like it — a consuming project may need its own Page-like model (e.g. `App\Models\Event\Event` in the yanmar-extranet project) that doesn't extend `Page` (API Platform doesn't inherit `#[ApiResource]`/`#[ApiProperty]` attributes across a class hierarchy, and the two resources often diverge on enough fields/relations that inheritance would fight itself). Instead, the behavior `Page` needs is split into small, composable traits under `Gingerminds\LaravelCms\Models\Trait`, used by `Page` itself and available as-is to any other model with the same shape:
+
+- **`HasMainVisualAndThumbnailTrait`** — `mainVisual()`/`thumbnail()` `BelongsTo` relations plus `getMainVisualFileAttribute()`/`getThumbnailFileAttribute()` accessors. Resolution order: the current translation's own `main_visual_id`/`thumbnail_id` if set, otherwise the owner's own relation — lets a translation override the owner's default image per-language.
+- **`HasResolvedContentTrait`** — `getContentAttribute()`, resolving `file`/`media` type block fields in the translation's raw stored `content` json into richer objects (via `ContentReferenceResolver`) before serialization. Only fit for a translation model whose `content` needs no special per-block-type handling; a project with bespoke block types (e.g. a `media_list` block) should keep its own `getContentAttribute()` instead.
+- **`HasStatusLabelTrait`** — `getStatusLabelAttribute()`, exposing the current `StatusState`'s short `code()`. Requires the model to cast `status` to a `Spatie\ModelStates\State` (typically `StatusState`, see below).
+
+All three assume the using model is translatable (`TranslatableModelTrait`, exposing `currentTranslation`) and, for the first two, that its translation model exposes the matching columns/relations (`main_visual_id`/`mainVisual`, `thumbnail_id`/`thumbnail`, `content`).
+
+### Shared status transitions (`AbstractPageStatusTransition`, `StatusState`)
+
+`Gingerminds\LaravelCms\State\Page\StatusState` and its transitions (`Gingerminds\LaravelCms\State\Page\Transitions\*`, e.g. `DraftToPublished`) are named after `Page` for historical reasons but are generic on purpose: any model that casts a `status` column to `StatusState` — `Page` and a project's own `Event` alike — can reuse the exact same state machine. `AbstractPageStatusTransition` only does plain Eloquent attribute get/set + `save()`, so its constructor takes a bare `Illuminate\Database\Eloquent\Model`, not a `Page`.
+
+### PHPStan markers (`Models\Contract\*`, `State\Page\Contract\HasStatusPropertyContract`)
+
+Widening the traits/transition above to a generic `Model` means PHPStan/Larastan can no longer prove the dynamic properties they access (`main_visual_id`, `mainVisual`, `content`, `status`, ...) actually exist — a bare `Model` has none of them statically. Three small classes exist purely to fix this, never extended or instantiated at runtime:
+
+- `Gingerminds\LaravelCms\Models\Contract\HasFileFieldsContract` — for `HasMainVisualAndThumbnailTrait`'s local `$translation`.
+- `Gingerminds\LaravelCms\Models\Contract\HasContentFieldContract` — for `HasResolvedContentTrait`'s local `$translation`.
+- `Gingerminds\LaravelCms\State\Page\Contract\HasStatusPropertyContract` — for `AbstractPageStatusTransition`'s local `$page`.
+
+Each declares the expected shape via `@property`/`@property-read` tags and is cast to locally (`/** @var HasFileFieldsContract|null $translation */`) right where the generic `Model` needs narrowing — the same technique `Page` itself already uses to cast `currentTranslation` to `PageTranslation`. They're deliberately **abstract classes extending `Model`**, not plain interfaces: Larastan's `ModelPropertyExtension` only resolves `@property` docblock tags against an actual `Model`-descended class reflection, not against an interface intersected with `Model` — a plain interface here silently kept reporting "undefined property" even though the interface declared it. `PageTranslation`, `App\Models\Event\EventTranslation`, `Page`, and `App\Models\Event\Event` all already declare the exact same shape via their own class docblocks, so nothing about their real behavior changes.
+
 ## Home pages (blank slug)
 
 A page's own slug being blank is a legitimate, deliberate state — it's the "home page" for whatever category it's under, or for the site itself if it also has no category. Visiting exactly that category's path (or the bare site root), with no further segment, resolves to it.
