@@ -70,9 +70,7 @@ class ContentReferenceResolver
                 continue;
             }
 
-            if ($type === 'toggle' && array_key_exists($name, $data)) {
-                $data[$name] = BlockFieldValidator::toBool($data[$name]);
-            }
+            $data = self::castToggleField($field, $data);
 
             if (!isset($resolvers[$type]) || !array_key_exists($name, $data)) {
                 continue;
@@ -84,6 +82,26 @@ class ContentReferenceResolver
                 $data[$name],
                 (bool) ($field['multiple'] ?? false),
             );
+        }
+
+        return $data;
+    }
+
+    /**
+     * `resolveFields()`'s self-healing branch for old, pre-`toBool()` rows —
+     * see `BlockFieldValidator::toBool()` — split out purely to keep that
+     * function's cognitive complexity down.
+     *
+     * @param array<string, mixed> $field
+     * @param array<string, mixed> $data
+     * @return array<string, mixed>
+     */
+    private static function castToggleField(array $field, array $data): array
+    {
+        $name = $field['name'];
+
+        if (($field['type'] ?? null) === 'toggle' && array_key_exists($name, $data)) {
+            $data[$name] = BlockFieldValidator::toBool($data[$name]);
         }
 
         return $data;
