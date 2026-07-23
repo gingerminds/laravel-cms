@@ -19,6 +19,8 @@ use InvalidArgumentException;
  */
 class MenuItemRepository extends AbstractRepository implements RepositoryInterface
 {
+    protected int $perPage = 100;
+
     public function getModelClass(): string
     {
         return ResourceResolver::model('menu_item');
