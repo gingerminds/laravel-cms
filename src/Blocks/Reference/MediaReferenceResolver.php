@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Gingerminds\LaravelCms\Blocks\Reference;
 
 use Gingerminds\LaravelCms\Blocks\ReferenceFieldResolver;
+use Gingerminds\LaravelCore\Models\EagerLoadableModelInterface;
 use Gingerminds\LaravelMediaManager\Resolver\ResourceResolver as MediaResourceResolver;
 use Illuminate\Database\Eloquent\Model;
 
@@ -30,8 +31,16 @@ class MediaReferenceResolver implements ReferenceFieldResolver
 
         $mediaModelClass = MediaResourceResolver::model('media');
 
+        // `resolveOne()` below reads `file_reference`/`thumbnail_reference`/
+        // `thumbnail_size`, all accessors that touch `file`/`thumbnail`
+        // directly (see `Media::getFileReferenceAttribute()` etc.) — without
+        // this, every resolved media lazy-loads both on every block resolve.
+        $with = is_subclass_of($mediaModelClass, EagerLoadableModelInterface::class)
+            ? $mediaModelClass::getEagerLoads()
+            : [];
+
         /** @var array<int|string, Model> */
-        return $mediaModelClass::query()->whereIn('id', $ids)->get()->keyBy('id')->all();
+        return $mediaModelClass::query()->with($with)->whereIn('id', $ids)->get()->keyBy('id')->all();
     }
 
     public function resolveOne(mixed $loaded): ?array

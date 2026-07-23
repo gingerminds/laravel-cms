@@ -8,7 +8,11 @@ use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use Gingerminds\LaravelCms\ApiProvider\Menu\MenuProvider;
 use Gingerminds\LaravelCms\Models\Menu\MenuItem\MenuItem;
+use Gingerminds\LaravelCore\Models\CacheableResourceInterface;
+use Gingerminds\LaravelCore\Models\EagerLoadableModelInterface;
 use Gingerminds\LaravelCore\Models\ResourceModelInterface;
+use Gingerminds\LaravelCore\Models\Trait\CacheableResourceTrait;
+use Gingerminds\LaravelCore\Models\Trait\EagerLoadableModelTrait;
 use Gingerminds\LaravelMultisite\Models\Site\SiteContextedModelTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -44,8 +48,13 @@ use Symfony\Component\Serializer\Attribute\Groups;
     Menu::GROUP_LIST,
     Menu::GROUP_READ,
 ]))]
-class Menu extends Model implements ResourceModelInterface
+class Menu extends Model implements
+    ResourceModelInterface,
+    EagerLoadableModelInterface,
+    CacheableResourceInterface
 {
+    use CacheableResourceTrait;
+    use EagerLoadableModelTrait;
     use SiteContextedModelTrait;
 
     public const string GROUP_LIST = 'menus:list';
@@ -81,5 +90,33 @@ class Menu extends Model implements ResourceModelInterface
             ->where('is_active', true)
             ->orderBy('position')
             ->with('children');
+    }
+
+    /**
+     * `active_items` is serialized in both GROUP_LIST and GROUP_READ but was
+     * never eager-loaded: every Menu row in a listing triggered its own
+     * activeItems query, and each MenuItem inside triggered its own
+     * recursive children query on top. Declaring it here fixes that N+1
+     * whether or not caching is even active.
+     *
+     * @return array<int, string>
+     */
+    public static function getEagerLoads(): array
+    {
+        return ['activeItems', 'activeItems.children'];
+    }
+
+    public static function getCacheKey(): string
+    {
+        return 'menu';
+    }
+
+    /**
+     * Barely changes — 24h instead of the default 1h
+     * (config('cache.resource_ttl_seconds')).
+     */
+    public static function getCacheTtlSeconds(): ?int
+    {
+        return 86400;
     }
 }

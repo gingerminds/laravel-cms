@@ -5,6 +5,7 @@ namespace Gingerminds\LaravelCms\Models\Menu\MenuItem;
 use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
 use Gingerminds\LaravelCms\Models\Menu\Menu;
+use Gingerminds\LaravelCore\Models\CacheCascadeInterface;
 use Gingerminds\LaravelCore\Models\ResourceModelInterface;
 use Gingerminds\LaravelCore\Models\SortableModelInterface;
 use Gingerminds\LaravelMultisite\Models\Site\SiteContextedModelTrait;
@@ -74,12 +75,25 @@ use Symfony\Component\Serializer\Attribute\Groups;
     Menu::GROUP_LIST,
     Menu::GROUP_READ,
 ]))]
-class MenuItem extends Model implements ResourceModelInterface, SortableModelInterface
+class MenuItem extends Model implements ResourceModelInterface, SortableModelInterface, CacheCascadeInterface
 {
     use TranslatableModelTrait;
     use SiteContextedModelTrait;
 
     protected string $translationModel = MenuItemTranslation::class;
+
+    /**
+     * Never served/listed on its own (see the empty operations list above) —
+     * Menu's cached representation embeds the whole active_items tree, so
+     * any change here (edit, reorder, delete) must invalidate the parent
+     * Menu's cache instead.
+     *
+     * @return array<int, string>
+     */
+    public static function getCascadeCacheKeys(): array
+    {
+        return ['menu'];
+    }
 
     /**
      * @return string[]

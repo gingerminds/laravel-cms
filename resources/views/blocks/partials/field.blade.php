@@ -23,6 +23,7 @@
     (the bracketed string) as their single `id` — doubling as name — since
     that's what those three components' own markup key off internally.
 --}}
+@php use Gingerminds\LaravelCore\Models\EagerLoadableModelInterface; @endphp
 @php use Gingerminds\LaravelMediaManager\Resolver\ResourceResolver as MediaResourceResolver; @endphp
 @switch($field['type'] ?? 'text')
     @case('wysiwyg')
@@ -78,9 +79,18 @@
         @php
             $mediaModelClass = MediaResourceResolver::model('media');
             $isMultipleMedia = (bool) ($field['multiple'] ?? false);
-            $selectedMedia   = $isMultipleMedia
-                ? $mediaModelClass::query()->whereIn('id', array_filter((array) $value))->get()
-                : (empty($value) ? null : $mediaModelClass::query()->find($value));
+
+            // media-select.blade.php's $normalizeItem reads
+            // thumbnail_reference/file_reference/etc. below, all accessors
+            // that touch `file`/`thumbnail` directly — without this, every
+            // selected media lazy-loads both on every block field rendered.
+            $mediaEagerLoads = is_subclass_of($mediaModelClass, EagerLoadableModelInterface::class)
+                ? $mediaModelClass::getEagerLoads()
+                : [];
+
+            $selectedMedia = $isMultipleMedia
+                ? $mediaModelClass::query()->with($mediaEagerLoads)->whereIn('id', array_filter((array) $value))->get()
+                : (empty($value) ? null : $mediaModelClass::query()->with($mediaEagerLoads)->find($value));
 
             // `laravel-multisite` is a required dependency of this package
             // (composer.json), so resolving the full language universe here

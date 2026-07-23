@@ -15,9 +15,14 @@
     ],
     "require": {
         "php": "^8.4",
-        "gingerminds/laravel-core": "^3.0",
-        "gingerminds/laravel-media-manager": "^6.2",
-        "gingerminds/laravel-multisite": "^2.3"
+        "gingerminds/laravel-core": "^4.0",
+        "gingerminds/laravel-media-manager": "^6.3",
+        "gingerminds/laravel-multisite": "^2.5"
+    },
+    "config": {
+        "platform": {
+            "ext-gd": "8.4"
+        }
     },
     "repositories": [],
     "require-dev": {

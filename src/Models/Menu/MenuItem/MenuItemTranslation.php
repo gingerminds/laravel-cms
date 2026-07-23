@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Gingerminds\LaravelCms\Models\Menu\MenuItem;
 
+use Gingerminds\LaravelCore\Models\CacheCascadeInterface;
 use Gingerminds\LaravelMultisite\Models\Trait\TranslationModelTrait;
 use Illuminate\Database\Eloquent\Model;
 
@@ -12,7 +13,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $url
  * @property string $description
  */
-class MenuItemTranslation extends Model
+class MenuItemTranslation extends Model implements CacheCascadeInterface
 {
     use TranslationModelTrait;
 
@@ -27,5 +28,17 @@ class MenuItemTranslation extends Model
             'description',
             'language_id',
         ];
+    }
+
+    /**
+     * A translated name/url/description change must also invalidate Menu's
+     * cache, since active_items (embedded in Menu's cached representation)
+     * renders these fields.
+     *
+     * @return array<int, string>
+     */
+    public static function getCascadeCacheKeys(): array
+    {
+        return ['menu'];
     }
 }
