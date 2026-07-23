@@ -19,8 +19,6 @@ use Illuminate\Http\Request;
 
 class MenuItemController extends AbstractController
 {
-    protected int $perPage = 100;
-
     public const string LABEL_S = 'gingerminds-cms::translation.menu_items.name_s';
 
     public function __construct(
