@@ -7,6 +7,7 @@
     `field.blade.php`'s own `media` case).
 --}}
 @php
+    use Gingerminds\LaravelCore\Models\EagerLoadableModelInterface;
     use Gingerminds\LaravelMediaManager\Resolver\ResourceResolver as MediaResourceResolver;
 
     $items = is_array($data['items'] ?? null) ? $data['items'] : [];
@@ -14,9 +15,17 @@
 
     $mediaModelClass = MediaResourceResolver::model('media');
     $mediaIds = array_values(array_unique(array_filter(array_column($items, 'media'))));
+
+    // `$media->thumbnail_reference` below reads `thumbnail` directly — same
+    // fix as field.blade.php's `@case('media')`, this preview just never got
+    // it.
+    $mediaEagerLoads = is_subclass_of($mediaModelClass, EagerLoadableModelInterface::class)
+        ? $mediaModelClass::getEagerLoads()
+        : [];
+
     $medias = $mediaIds === []
         ? collect()
-        : $mediaModelClass::query()->whereIn('id', $mediaIds)->get()->keyBy('id');
+        : $mediaModelClass::query()->with($mediaEagerLoads)->whereIn('id', $mediaIds)->get()->keyBy('id');
 @endphp
 <div class="cms-block-preview cms-block-preview-media-list">
     @if(!empty($data['title']))

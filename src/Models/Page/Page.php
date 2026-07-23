@@ -13,9 +13,13 @@ use Gingerminds\LaravelCms\Models\Trait\HasMainVisualAndThumbnailTrait;
 use Gingerminds\LaravelCms\Models\Trait\HasResolvedContentTrait;
 use Gingerminds\LaravelCms\Models\Trait\HasStatusLabelTrait;
 use Gingerminds\LaravelCms\State\Page\StatusState;
+use Gingerminds\LaravelCore\Models\CacheableResourceInterface;
+use Gingerminds\LaravelCore\Models\EagerLoadableModelInterface;
 use Gingerminds\LaravelCore\Models\FilterableModelInterface;
 use Gingerminds\LaravelCore\Models\ResourceModelInterface;
 use Gingerminds\LaravelCore\Models\SearchableModelInterface;
+use Gingerminds\LaravelCore\Models\Trait\CacheableResourceTrait;
+use Gingerminds\LaravelCore\Models\Trait\EagerLoadableModelTrait;
 use Gingerminds\LaravelMultisite\Models\Site\SiteContextedModelTrait;
 use Gingerminds\LaravelMultisite\Models\Trait\TranslatableModelTrait;
 use Illuminate\Database\Eloquent\Model;
@@ -120,8 +124,15 @@ use Symfony\Component\TypeInfo\TypeIdentifier;
         false,
     ),
 )]
-class Page extends Model implements ResourceModelInterface, FilterableModelInterface, SearchableModelInterface
+class Page extends Model implements
+    ResourceModelInterface,
+    FilterableModelInterface,
+    SearchableModelInterface,
+    EagerLoadableModelInterface,
+    CacheableResourceInterface
 {
+    use CacheableResourceTrait;
+    use EagerLoadableModelTrait;
     use HasMainVisualAndThumbnailTrait;
     use HasResolvedContentTrait;
     use HasStates;
@@ -130,6 +141,23 @@ class Page extends Model implements ResourceModelInterface, FilterableModelInter
     use TranslatableModelTrait;
 
     protected string $translationModel = PageTranslation::class;
+
+    /**
+     * `main_visual_file`/`thumbnail_file` (HasMainVisualAndThumbnailTrait) and
+     * `category` (walked all the way to the root for `full_path`/`switch_lang`
+     * via `PageCategory::parentChain()`) all lazy-load per row otherwise.
+     *
+     * @return array<int, string>
+     */
+    public static function getEagerLoads(): array
+    {
+        return ['mainVisual', 'thumbnail', 'category.parentChain'];
+    }
+
+    public static function getCacheKey(): string
+    {
+        return 'page';
+    }
 
     /**
      * @var array<string, string>

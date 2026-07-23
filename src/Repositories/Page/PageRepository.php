@@ -13,6 +13,7 @@ use Gingerminds\LaravelCms\Services\Page\PageUrlSyncer;
 use Gingerminds\LaravelCms\State\Page\Status\Published;
 use Gingerminds\LaravelCms\State\Page\StatusState;
 use Gingerminds\LaravelCore\Http\Requests\FormRequestInterface;
+use Gingerminds\LaravelCore\Models\EagerLoadableModelInterface;
 use Gingerminds\LaravelCore\Models\ResourceModelInterface;
 use Gingerminds\LaravelCore\Repositories\AbstractRepository;
 use Gingerminds\LaravelCore\Repositories\Filters\FilterHandlerRegistry;
@@ -79,8 +80,28 @@ class PageRepository extends AbstractRepository implements RepositoryInterface
                 // the resolved class is what actually respects a project's
                 // `App\Models\Page\Page`-style override (e.g. a customized
                 // `getContentAttribute()`).
+                // Bypasses AbstractRepository::get() (single lookup by
+                // resolved URL, not a paginated listing), so getEagerLoads()
+                // is merged in by hand here — otherwise every relation it
+                // declares (mainVisual, thumbnail, category.parentChain)
+                // lazy-loads instead.
+                // The `@var class-string<Page>` above is a local assertion for
+                // this method's own type-checking, not a runtime guarantee:
+                // `$modelClass` actually comes from `ResourceResolver::model()`,
+                // which just reads a config string — a project could point
+                // `gingerminds-cms.resources.page.model` at a class that
+                // doesn't extend this package's `Page` (and so doesn't pick up
+                // `EagerLoadableModelInterface` from it). Real `Page` subtypes
+                // will always pass this check, hence PHPStan flags it as
+                // always-true, but it's what keeps a misconfigured override
+                // from fataling here instead of just skipping eager loads.
+                // @phpstan-ignore function.alreadyNarrowedType
+                $with = is_subclass_of($modelClass, EagerLoadableModelInterface::class)
+                    ? $modelClass::getEagerLoads()
+                    : [];
+
                 /** @var Page|null $page */
-                $page = $modelClass::query()->find($pageUrl->page_id);
+                $page = $modelClass::query()->with($with)->find($pageUrl->page_id);
 
                 return $page;
             }

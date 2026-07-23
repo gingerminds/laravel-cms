@@ -68,10 +68,15 @@ class PageCategoryRepository extends AbstractRepository implements RepositoryInt
         /** @var class-string<PageCategory> $modelClass */
         $modelClass = $this->getModelClass();
 
+        // Bypasses AbstractRepository::get() (tree fetch, not a paginated
+        // listing), so getEagerLoads() (`parentChain`) is merged in by hand
+        // here — `adminChildren` itself also nests `parentChain` at every
+        // level (see PageCategory::adminChildren()), so the whole tree is
+        // covered, not just these root rows.
         return $modelClass::query()
             ->whereNull('parent_id')
             ->orderBy('code')
-            ->with('adminChildren')
+            ->with(array_merge(['adminChildren'], $modelClass::getEagerLoads()))
             ->get();
     }
 

@@ -20,6 +20,18 @@
 
 Uses multisite's `TranslationModelTrait`. Fillable: `name`, `url`, `description`, `language_id`.
 
+## Caching
+
+`Menu` is cacheable (core's `CacheableResourceInterface`, cache key `menu`) and
+declares `activeItems`/`activeItems.children` as required eager loads — both admin
+listings and the public API were triggering a fresh `activeItems` query per menu
+row, plus a recursive `children` query per item, before this. `MenuItem` and
+`MenuItemTranslation` are never independently cached, but both cascade-invalidate
+`menu` on save/delete (`CacheCascadeInterface`) since `Menu`'s cached representation
+embeds the whole item tree, translations included. See
+[laravel-core's cache system doc](../../gingerminds-laravel-core/docs/CacheSystemRedesign.md)
+for the general mechanism.
+
 ## Admin screens
 
 - `{admin_prefix}/menus` — menu CRUD.
