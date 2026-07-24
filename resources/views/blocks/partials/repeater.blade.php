@@ -28,8 +28,12 @@
      gets its own properly associated label via field.blade.php). The extra
      classes on both just cancel the browser/Bootstrap default fieldset
      border and legend size/float so it still looks exactly like the plain
-     label it replaces. --}}
-<fieldset class="col-12 border-0 p-0 m-0">
+     label it replaces. `pt-0 pb-0` only cancels the default fieldset's own
+     *vertical* padding — not `p-0`, which (being a Bootstrap `!important`
+     utility) also clobbered this `.col-12`'s own computed grid gutter
+     padding, leaving this field flush against the modal instead of aligned
+     with Title/Headline above it. --}}
+<fieldset class="col-12 border-0 pt-0 pb-0 m-0">
     <legend class="form-label fs-6 fw-normal float-none w-auto mb-2 p-0">
         {{ $field['label'] }}
         @if($required)
