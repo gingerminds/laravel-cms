@@ -39,6 +39,7 @@
                     :required="false"
                     :existing-file="$translation?->mainVisual"
                     size="xl"
+                    :maxSize="round(config('gingerminds-media-manager.max_thumbnail_size') / 1024, 1)"
             />
         </div>
         <div class="row mb-3">
@@ -50,6 +51,7 @@
                     :required="false"
                     :existing-file="$translation?->thumbnail"
                     size="xl"
+                    :maxSize="round(config('gingerminds-media-manager.max_thumbnail_size') / 1024, 1)"
             />
         </div>
         <div class="row">

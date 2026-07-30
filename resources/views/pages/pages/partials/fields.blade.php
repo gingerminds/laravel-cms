@@ -22,6 +22,7 @@
                         accept="image/*"
                         :required="false"
                         :existing-file="isset($page) ? $page->mainVisual : null"
+                        :maxSize="round(config('gingerminds-media-manager.max_thumbnail_size') / 1024, 1)"
                 />
                 <x-gingerminds-media-manager::form.inputs.file
                         id="thumbnail"
@@ -29,6 +30,7 @@
                         accept="image/*"
                         :required="false"
                         :existing-file="isset($page) ? $page->thumbnail : null"
+                        :maxSize="round(config('gingerminds-media-manager.max_thumbnail_size') / 1024, 1)"
                 />
             </div>
         </div>
