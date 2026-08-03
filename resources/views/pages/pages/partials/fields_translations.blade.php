@@ -15,7 +15,7 @@
         : []"
                 fields-view="gingerminds-cms::pages.pages.partials.translation-field"
                 :default-language="$defaultLanguage"
-                :extra="['categoryPaths' => $categoryPaths]"
+                :extra="['categoryPaths' => $categoryPaths, 'page' => $page ?? null]"
             />
         </div>
     </div>

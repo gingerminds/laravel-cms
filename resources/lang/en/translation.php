@@ -222,4 +222,10 @@ return [
             'delete_table' => 'Delete table',
         ],
     ],
+
+    'preview' => [
+        'action' => 'Preview',
+        'choose_url' => 'Choose the preview URL',
+        'open' => 'Open',
+    ],
 ];

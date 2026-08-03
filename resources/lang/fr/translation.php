@@ -222,4 +222,10 @@ return [
             'delete_table' => 'Supprimer le tableau',
         ],
     ],
+
+    'preview' => [
+        'action' => 'Aperçu',
+        'choose_url' => "Choisir l'URL d'aperçu",
+        'open' => 'Ouvrir',
+    ],
 ];

@@ -1,3 +1,14 @@
+@isset($page)
+    <div class="d-flex justify-content-end mb-3">
+        <x-gingerminds-cms::preview-button
+            :site="$page->site"
+            content-type="page"
+            :content-id="$page->id"
+            :language="$language"
+        />
+    </div>
+@endisset
+
 <div class="row">
     <div class="col-lg-8">
         <x-gingerminds-cms::form.inputs.canvas
