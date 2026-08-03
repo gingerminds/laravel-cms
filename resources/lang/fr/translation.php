@@ -87,6 +87,7 @@ return [
             'add_repeater_row' => 'Ajouter une ligne',
             'remove_repeater_row' => 'Supprimer cette ligne',
             'reorder_repeater_row' => 'Glisser pour réordonner',
+            'toggle_preview' => 'Afficher/masquer l\'aperçu',
         ],
         'message' => [
             'no_block' => 'Aucun type de bloc disponible.',

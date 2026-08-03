@@ -19,6 +19,7 @@
         <div class="cms-block-item mb-3" data-cms-block>
             <div class="cms-block-item-toolbar d-flex align-items-center gap-1 px-3 py-1">
                 <span class="drag-handle d-inline-flex align-items-center me-1"><i class="bi bi-grip-vertical"></i></span>
+                <button type="button" class="btn-icon cms-block-toggle"><i class="bi bi-chevron-right cms-block-item-chevron"></i></button>
                 <span class="cms-block-item-label fw-semibold flex-grow-1"></span>
                 <button type="button" class="btn-icon cms-block-edit"><i class="bi bi-pencil-square"></i></button>
                 <button type="button" class="btn-icon cms-block-remove"><i class="bi bi-trash"></i></button>
@@ -79,10 +80,14 @@
                     ->flatten()
                     ->all();
             @endphp
-            <div class="cms-block-item mb-3 @if($blockErrors) has-error @endif" data-cms-block data-uid="{{ $uid }}"
+            <div class="cms-block-item mb-3 @if($blockErrors) has-error @else is-collapsed @endif" data-cms-block data-uid="{{ $uid }}"
                  data-type="{{ $blockType }}">
                 <div class="cms-block-item-toolbar d-flex align-items-center gap-1 px-3 py-1">
                     <span class="drag-handle d-inline-flex align-items-center me-1"><i class="bi bi-grip-vertical"></i></span>
+                    <button type="button" class="btn-icon cms-block-toggle"
+                            title="@lang('gingerminds-cms::translation.blocks.action.toggle_preview')">
+                        <i class="bi bi-chevron-right cms-block-item-chevron"></i>
+                    </button>
                     <span class="cms-block-item-label fw-semibold flex-grow-1">
                         {{ $block?->label() ?? $blockType }}
                     </span>

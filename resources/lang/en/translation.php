@@ -87,6 +87,7 @@ return [
             'add_repeater_row' => 'Add a row',
             'remove_repeater_row' => 'Remove this row',
             'reorder_repeater_row' => 'Drag to reorder',
+            'toggle_preview' => 'Show/hide preview',
         ],
         'message' => [
             'no_block' => 'No block type available.',
