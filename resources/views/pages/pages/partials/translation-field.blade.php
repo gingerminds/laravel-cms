@@ -1,19 +1,23 @@
 @isset($page)
-    <div class="d-flex justify-content-end mb-3">
-        <x-gingerminds-cms::preview-button
-            :site="$page->site"
-            content-type="page"
-            :content-id="$page->id"
-            :language="$language"
-        />
+    <div class="row mb-3">
+        <div class="col-lg-12">
+            <div class="d-flex justify-content-end mb-3">
+                <x-gingerminds-cms::preview-button
+                        :site="$page->site"
+                        content-type="page"
+                        :content-id="$page->id"
+                        :language="$language"
+                />
+            </div>
+        </div>
     </div>
 @endisset
 
 <div class="row">
     <div class="col-lg-8">
         <x-gingerminds-cms::form.inputs.canvas
-            :language="$language"
-            :translation="$translation"
+                :language="$language"
+                :translation="$translation"
         />
     </div>
     <div class="col-lg-4">

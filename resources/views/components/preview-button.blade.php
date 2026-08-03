@@ -6,27 +6,24 @@
 ])
 
 @php
-    // Site::$frontUrls is an accessor returning plain URL strings
-    // (Collection<int, string>), not the underlying SiteFrontUrl models.
     $frontUrls = $site?->frontUrls ?? collect();
-    $buildPreviewUrl = fn (string $frontUrl) => rtrim($frontUrl, '/')
+    $buildPreviewUrl = fn ($frontUrl) => rtrim($frontUrl->url, '/')
         . '/' . $language->iso
         . '/preview/' . $contentType
         . '/' . $contentId;
     $modalId = 'preview-modal-' . $contentType . '-' . $contentId . '-' . $language->id;
 @endphp
-
 @if($frontUrls->isNotEmpty())
     @if($frontUrls->count() === 1)
         <a href="{{ $buildPreviewUrl($frontUrls->first()) }}"
            target="_blank"
            rel="noopener"
-           class="btn btn-sm btn-outline-secondary">
+           class="btn btn-primary">
             <i class="bi bi-eye me-1"></i>@lang('gingerminds-cms::translation.preview.action')
         </a>
     @else
         <button type="button"
-                class="btn btn-sm btn-outline-secondary"
+                class="btn btn-primary"
                 data-bs-toggle="modal"
                 data-bs-target="#{{ $modalId }}">
             <i class="bi bi-eye me-1"></i>@lang('gingerminds-cms::translation.preview.action')
@@ -45,17 +42,17 @@
                                 <input class="form-check-input preview-url-option"
                                        type="radio"
                                        name="{{ $modalId }}-url"
-                                       id="{{ $modalId }}-{{ $loop->index }}"
+                                       id="{{ $modalId }}-{{ $frontUrl->id }}"
                                        value="{{ $buildPreviewUrl($frontUrl) }}"
                                        @if($loop->first) checked @endif>
-                                <label class="form-check-label" for="{{ $modalId }}-{{ $loop->index }}">
-                                    {{ $frontUrl }}
+                                <label class="form-check-label" for="{{ $modalId }}-{{ $frontUrl->id }}">
+                                    {{ $frontUrl->url }}
                                 </label>
                             </div>
                         @endforeach
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                             @lang('gingerminds-core::translation.action.cancel')
                         </button>
                         <button type="button" class="btn btn-primary preview-confirm" data-bs-dismiss="modal">
