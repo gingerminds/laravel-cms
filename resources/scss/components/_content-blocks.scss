@@ -56,8 +56,43 @@
     background: rgba(var(--bs-danger-rgb), .1);
 }
 
+.cms-block-item-toolbar .cms-block-item-chevron {
+    transition: transform .15s ease;
+    transform: rotate(90deg);
+}
+
+.cms-block-item.is-collapsed .cms-block-item-chevron {
+    transform: rotate(0deg);
+}
+
 .cms-block-item-preview {
     padding: 1rem 1.25rem;
+}
+
+/* Collapsed by default on every already-stored block (canvas.blade.php)
+   so opening a page with a lot of content doesn't dump every block's full
+   preview on the contributor at once — only a peek of the top of the
+   content shows, with a fade hinting there's more, and the chevron in the
+   toolbar (.cms-block-toggle) expands/collapses it again. A block just
+   added or just edited (dom.js's buildBlockItem, cloned from a template
+   that never carries `.is-collapsed`) always renders expanded instead,
+   since that's the one moment the contributor actually needs to see it in
+   full. */
+.cms-block-item.is-collapsed .cms-block-item-preview {
+    max-height: 15rem;
+    overflow: hidden;
+    position: relative;
+
+    &::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 3rem;
+        background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.65));
+        pointer-events: none;
+    }
 }
 
 .cms-block-insert-slot {

@@ -60,6 +60,8 @@ function initCanvas(canvas) {
             openEditForm(canvas, item);
         } else if (event.target.closest('.cms-block-remove')) {
             removeBlock(canvas, item);
+        } else if (event.target.closest('.cms-block-toggle')) {
+            item.classList.toggle('is-collapsed');
         }
     });
 
