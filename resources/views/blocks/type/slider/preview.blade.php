@@ -1,12 +1,11 @@
 {{--
-    Admin preview for the "slider" block (structural only — see
-    docs/Blocks.md, the headless frontend renders the real carousel). This
-    is a static filmstrip of thumbnails, not a working slider, so contributors
-    can see at a glance which images they've added, in what order.
+    Admin preview for the "slider" block (structural only, see
+    docs/Blocks.md) — a static filmstrip, not a working carousel, so
+    contributors can see at a glance which images they've added and in what
+    order.
 
-    `slides` is a `repeater` field (docs/Blocks.md) — each row's `image` is
-    a `file` type field (BlockFileFieldSync), so `slide.image` is a `File`
-    id directly, same lookup as `Cards::cards.*.image`.
+    `slides` is a `repeater` field; each row's `image` is a `file` field
+    (BlockFileFieldSync), same lookup as `Cards::cards.*.image`.
 --}}
 @php
     $slides = is_array($data['slides'] ?? null) ? $data['slides'] : [];

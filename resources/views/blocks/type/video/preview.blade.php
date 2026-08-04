@@ -1,17 +1,11 @@
 {{--
-    Admin preview for the "video" block. Structural, not pixel-perfect (see
-    docs/ContentBlocks.md — the headless frontend renders the real thing).
-    Included via `@include($block->previewView(), [...])`, not a Blade
-    component, so `$block`/`$data`/`$uid` are plain variables.
+    Admin preview for the "video" block (structural only, see
+    docs/ContentBlocks.md; included via `@include`, so `$block`/`$data`/`$uid`
+    are plain vars, not props).
 
-    `embed_code` is a plain `text` field (see Video::fields()), so nothing
-    stops a contributor from pasting a full YouTube URL (watch?v=..., or the
-    youtu.be short link) instead of the bare 11-char video id the
-    `/embed/{id}` endpoint expects — YouTube's player then fails with a
-    generic "An error occurred" (Playback ID) rather than a helpful message.
-    The id is extracted here from whatever shape was pasted, falling back to
-    the raw value unchanged if none of the known patterns match (so a
-    correctly-entered bare id keeps working exactly as before).
+    `embed_code` is a plain `text` field, so a contributor may paste a full
+    YouTube URL instead of the bare video id `/embed/{id}` expects; the id is
+    extracted here, falling back to the raw value if no known pattern matches.
 --}}
 @php
     $videoId = $data['embed_code'] ?? null;

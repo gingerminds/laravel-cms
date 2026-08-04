@@ -1,8 +1,7 @@
 {{--
-    Admin preview for the "title_text" block. Structural, not pixel-perfect
-    (see docs/ContentBlocks.md — the headless frontend renders the real
-    thing). Included via `@include($block->previewView(), [...])`, not a
-    Blade component, so `$block`/`$data`/`$uid` are plain variables.
+    Admin preview for the "title_text" block (structural only, see
+    docs/ContentBlocks.md; included via `@include`, so `$block`/`$data`/`$uid`
+    are plain vars, not props).
 --}}
 <div class="cms-block-preview cms-block-preview-title-text">
     @if(!empty($data['title']))

@@ -1,12 +1,11 @@
 {{--
-    Admin preview for the "cards" block (structural only — see
-    docs/Blocks.md, the headless frontend renders the real thing). Included
-    via `@include($block->previewView(), [...])`, not a Blade component, so
-    `$block`/`$data`/`$uid` are plain variables here, not props.
+    Admin preview for the "cards" block (structural only, see docs/Blocks.md;
+    included via `@include`, so `$block`/`$data`/`$uid` are plain vars, not
+    props).
 
-    `cards` is a `repeater` field (docs/Blocks.md) — each row's `image` is a
-    `file` type field (BlockFileFieldSync), so `row.image` is a `File` id
-    directly, same lookup as `TextImage::image`.
+    `cards` is a `repeater` field; each row's `image` is a `file` field
+    (BlockFileFieldSync), so `row.image` is a `File` id directly, same lookup
+    as `TextImage::image`.
 --}}
 @php
     $cards = is_array($data['cards'] ?? null) ? $data['cards'] : [];

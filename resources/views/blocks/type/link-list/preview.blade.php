@@ -1,10 +1,9 @@
 {{--
-    Admin preview for the "link_list" block (structural only — see
-    docs/Blocks.md, the headless frontend renders the real thing).
+    Admin preview for the "link_list" block (structural only, see
+    docs/Blocks.md).
 
-    `links` is a `repeater` field (docs/Blocks.md) — each row's `image` is
-    an optional `file` type field (BlockFileFieldSync), same lookup as
-    `Cards::cards.*.image`.
+    `links` is a `repeater` field; each row's `image` is an optional `file`
+    field (BlockFileFieldSync), same lookup as `Cards::cards.*.image`.
 --}}
 @php
     $links = is_array($data['links'] ?? null) ? $data['links'] : [];
