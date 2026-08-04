@@ -7,8 +7,9 @@
 
 @php
     $frontUrls = $site?->frontUrls ?? collect();
+    $isDefaultLocale = $site?->defaultLanguage->contains('id', $language->id) ?? false;
     $buildPreviewUrl = fn ($frontUrl) => rtrim($frontUrl->url, '/')
-        . '/' . $language->iso
+        . ($isDefaultLocale ? '' : '/' . $language->iso)
         . '/preview/' . $contentType
         . '/' . $contentId;
     $modalId = 'preview-modal-' . $contentType . '-' . $contentId . '-' . $language->id;
