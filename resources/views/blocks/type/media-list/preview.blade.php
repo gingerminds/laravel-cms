@@ -1,10 +1,10 @@
 {{--
-    Admin preview for the "media_list" block (structural only — see
-    docs/Blocks.md, the headless frontend renders the real thing).
+    Admin preview for the "media_list" block (structural only, see
+    docs/Blocks.md).
 
-    `items` is a `repeater` field, each row's `media` a shared-library
-    `media` type field (raw media id here, same lookup as
-    `field.blade.php`'s own `media` case).
+    `items` is a `repeater` field; each row's `media` is a shared-library
+    `media` field (raw media id, same lookup as `field.blade.php`'s `media`
+    case).
 --}}
 @php
     use Gingerminds\LaravelCore\Models\EagerLoadableModelInterface;

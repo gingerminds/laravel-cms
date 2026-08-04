@@ -1,17 +1,12 @@
 {{--
-    Admin preview for the "text_image" block (structural only — see
-    docs/Blocks.md, the headless frontend renders the real thing). Included
-    via `@include($block->previewView(), [...])`, not a Blade component, so
-    `$block`/`$data`/`$uid` are plain variables here, not props.
+    Admin preview for the "text_image" block (structural only, see
+    docs/Blocks.md; included via `@include`, so `$block`/`$data`/`$uid` are
+    plain vars, not props).
 
-    `image_position` decides which side the image sits on (off = left, on =
-    right, see the field's own helper text) — handled here with a flex class
-    rather than swapping markup order, so the DOM stays predictable.
-
-    `image` is a `file` type field (BlockFileFieldSync, docs/Blocks.md) —
-    `data.image` is a `File` id directly, not a `Media` id, so no library
-    lookup/UUID-reference indirection is needed here unlike the `media`
-    type: a File IS the image, when it's one at all.
+    `image_position` (off = left, on = right) is handled with a flex class
+    rather than swapping markup order, keeping the DOM predictable. `image`
+    is a `file` field (BlockFileFieldSync) — `data.image` is a `File` id
+    directly, not a `Media` id, so no library lookup is needed here.
 --}}
 @php
     $file = null;

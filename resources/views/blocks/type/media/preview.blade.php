@@ -1,13 +1,11 @@
 {{--
-    Admin preview for the "media" block (structural only — see
-    docs/Blocks.md, the headless frontend renders the real thing). Included
-    via `@include($block->previewView(), [...])`, not a Blade component, so
-    `$block`/`$data`/`$uid` are plain variables here, not props.
+    Admin preview for the "media" block (structural only, see docs/Blocks.md;
+    included via `@include`, so `$block`/`$data`/`$uid` are plain vars, not
+    props).
 
-    `file` is a `file` type field (BlockFileFieldSync, docs/Blocks.md) with
-    no mime restriction — `data.file` is a `File` id directly. Images get a
-    thumbnail like `TextImage::image`; anything else falls back to an icon
-    plus its name/size, since this block isn't limited to pictures.
+    `file` is a `file` field with no mime restriction — `data.file` is a
+    `File` id directly. Images get a thumbnail like `TextImage::image`;
+    anything else falls back to an icon plus name/size.
 --}}
 @php
     $file = null;
