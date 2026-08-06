@@ -76,4 +76,33 @@ abstract class AbstractCmsTranslatableResourceRequest extends AbstractTranslatab
 
         return $attributes;
     }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function fileFieldRules(): array
+    {
+        $rules = [];
+
+        foreach ($this->fileFields() as $field) {
+            $rules[$field]             = $this->fileRule($field);
+            $rules[$field . '_remove'] = ['nullable', 'boolean'];
+        }
+
+        return $rules;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function allTranslationRules(): array
+    {
+        $rules = [];
+
+        foreach ($this->submittedLanguageIds() as $langId) {
+            $rules = [...$rules, ...$this->translationFieldRules($langId)];
+        }
+
+        return $rules;
+    }
 }

@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Gingerminds\LaravelCms\Http\Request\Concerns;
 
+use Gingerminds\LaravelCms\Blocks\ContentFieldSupport;
+
 trait HandlesContentBlocksTrait
 {
     protected function contentFieldName(): ?string
     {
-        return null;
+        return 'content';
     }
 
     /**
@@ -16,7 +18,16 @@ trait HandlesContentBlocksTrait
      */
     protected function contentBlockRules(int|string $langId): array
     {
-        return [];
+        $field = $this->contentFieldName();
+
+        if ($field === null) {
+            return [];
+        }
+
+        return ContentFieldSupport::rulesFor(
+            "translations.$langId.$field",
+            $this->input("translations.$langId.$field", [])
+        );
     }
 
     /**
@@ -24,18 +35,31 @@ trait HandlesContentBlocksTrait
      */
     protected function contentBlockAttributes(int|string $langId, string $languageLabel): array
     {
-        return [];
+        $field = $this->contentFieldName();
+
+        if ($field === null) {
+            return [];
+        }
+
+        return ContentFieldSupport::attributesFor(
+            "translations.$langId.$field",
+            $this->input("translations.$langId.$field", []),
+            $languageLabel
+        );
     }
 
     /**
-     * Hook to decode/normalize the submitted translations before
-     * validation runs (e.g. the JSON-encoded content blocks payload).
-     *
      * @param  array<int|string, array<string, mixed>>  $translations
      * @return array<int|string, array<string, mixed>>
      */
     protected function decodeTranslations(array $translations): array
     {
-        return $translations;
+        $field = $this->contentFieldName();
+
+        if ($field === null) {
+            return $translations;
+        }
+
+        return ContentFieldSupport::decodeAndPrune($translations, $field);
     }
 }

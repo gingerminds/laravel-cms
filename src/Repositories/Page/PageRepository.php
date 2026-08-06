@@ -4,26 +4,21 @@ declare(strict_types=1);
 
 namespace Gingerminds\LaravelCms\Repositories\Page;
 
-use Gingerminds\LaravelCms\Blocks\BlockFileFieldSync;
 use Gingerminds\LaravelCms\Models\Page\Page;
-use Gingerminds\LaravelCms\Models\Page\PageTranslation;
 use Gingerminds\LaravelCms\Models\Page\PageUrl;
+use Gingerminds\LaravelCms\Repositories\Concerns\SyncsTranslatableResourceTrait;
 use Gingerminds\LaravelCms\Resolver\ResourceResolver;
 use Gingerminds\LaravelCms\Services\Page\PageUrlSyncer;
 use Gingerminds\LaravelCms\State\Page\Status\Published;
-use Gingerminds\LaravelCms\State\Page\StatusState;
 use Gingerminds\LaravelCore\Http\Requests\FormRequestInterface;
 use Gingerminds\LaravelCore\Models\EagerLoadableModelInterface;
 use Gingerminds\LaravelCore\Models\ResourceModelInterface;
 use Gingerminds\LaravelCore\Repositories\AbstractRepository;
 use Gingerminds\LaravelCore\Repositories\Filters\FilterHandlerRegistry;
 use Gingerminds\LaravelCore\Repositories\RepositoryInterface;
-use Gingerminds\LaravelMediaManager\Models\File\File;
 use Gingerminds\LaravelMediaManager\Services\File\FileUploadService;
-use Gingerminds\LaravelMultisite\Services\Context\LanguageContext;
 use Gingerminds\LaravelMultisite\Services\Context\SiteContext;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
@@ -34,6 +29,8 @@ use InvalidArgumentException;
  */
 class PageRepository extends AbstractRepository implements RepositoryInterface
 {
+    use SyncsTranslatableResourceTrait;
+
     private const array FILE_FIELDS = ['main_visual', 'thumbnail'];
 
     public function __construct(
@@ -110,23 +107,6 @@ class PageRepository extends AbstractRepository implements RepositoryInterface
         return null;
     }
 
-    /**
-     * @return list<int>
-     */
-    private function resolveLanguagePreference(): array
-    {
-        if (!app()->bound(LanguageContext::class)) {
-            return [];
-        }
-
-        $context = app(LanguageContext::class);
-
-        return array_values(array_filter([
-            $context->current()?->id,
-            $context->fallback()?->id,
-        ]));
-    }
-
     public function findPublishedByCode(string $code): ?Page
     {
         /** @var class-string<Page> $modelClass */
@@ -167,7 +147,7 @@ class PageRepository extends AbstractRepository implements RepositoryInterface
             : null;
 
         foreach (self::FILE_FIELDS as $field) {
-            $this->syncPageFile($request, $resourceModel, $field);
+            $this->syncResourceFile($request, $resourceModel, $field);
         }
 
         $this->syncStatus($request, $resourceModel);
@@ -181,139 +161,17 @@ class PageRepository extends AbstractRepository implements RepositoryInterface
         return $resourceModel;
     }
 
-    private function syncStatus(FormRequestInterface $request, Page $page): void
+    protected function uploadFolder(): string
     {
-        /** @var class-string<StatusState>|null $requestedStatus */
-        $requestedStatus = $request->input('status');
-
-        if (null === $requestedStatus || $requestedStatus === get_class($page->status)) {
-            $page->save();
-
-            return;
-        }
-
-        $page->status->transitionTo($requestedStatus);
-    }
-
-    private function syncPageFile(
-        FormRequestInterface $request,
-        Page $page,
-        string $field
-    ): void {
-        /** @var BelongsTo<File, Page> $relation */
-        $relation = $page->{$this->relationName($field)}();
-
-        $uploaded = $request->file($field);
-
-        if ($uploaded !== null) {
-            /** @var File|null $old */
-            $old = $relation->getResults();
-
-            $file = $this->uploadService->replace($uploaded, $old, 'pages');
-            $relation->associate($file);
-
-            return;
-        }
-
-        if ($request->boolean($field . '_remove')) {
-            /** @var File|null $old */
-            $old = $relation->getResults();
-
-            if ($old !== null) {
-                $this->uploadService->delete($old);
-                $relation->dissociate();
-            }
-        }
+        return 'pages';
     }
 
     /**
-     * @return array<int|string, array<string, mixed>>
+     * @return list<string>
      */
-    private function prepareTranslations(
-        FormRequestInterface $request,
-        Page $page
-    ): array {
-        /** @var array<int|string, array<string, mixed>> $translations */
-        $translations = $request->input('translations', []);
-
-        $existingTranslations = $page->translations->keyBy('language_id');
-
-        foreach ($translations as $languageId => $fields) {
-            /** @var PageTranslation|null $translation */
-            $translation = $existingTranslations->get($languageId);
-
-            foreach (self::FILE_FIELDS as $field) {
-                $fields = $this->syncTranslationFile(
-                    $request,
-                    $translation,
-                    $languageId,
-                    $field,
-                    $fields
-                );
-            }
-
-            // A content block's own `file` type field (see BlockFileFieldSync)
-            // is exclusive to that block, unlike `main_visual`/`thumbnail`
-            // above — nothing else references it, so once it drops out of
-            // the submitted `content` array (block removed, or its file
-            // replaced/cleared), it's safe to delete outright rather than
-            // just dissociate.
-            BlockFileFieldSync::pruneOrphanedFiles(
-                $translation?->content,
-                $fields['content'] ?? []
-            );
-
-            $fields['site_id'] = $page->site_id;
-
-            if (array_key_exists('slug', $fields) && '' === $fields['slug']) {
-                $fields['slug'] = null;
-            }
-
-            $translations[$languageId] = $fields;
-        }
-
-        return $translations;
-    }
-
-    /**
-     * @param array<string, mixed> $fields
-     * @return array<string, mixed>
-     */
-    private function syncTranslationFile(
-        FormRequestInterface $request,
-        ?PageTranslation $translation,
-        int|string $languageId,
-        string $field,
-        array $fields
-    ): array {
-        $idKey        = $field . '_id';
-        $relationName = $this->relationName($field);
-
-        /** @var File|null $old */
-        $old = $translation?->{$relationName};
-
-        $uploaded = $request->file("translations.$languageId.$field");
-
-        unset($fields[$field], $fields[$field . '_remove']);
-
-        if ($uploaded !== null) {
-            $file           = $this->uploadService->replace($uploaded, $old, 'pages');
-            $fields[$idKey] = $file->id;
-
-            return $fields;
-        }
-
-        if ($request->boolean("translations.$languageId.{$field}_remove") && $old !== null) {
-            $this->uploadService->delete($old);
-            $fields[$idKey] = null;
-        }
-
-        return $fields;
-    }
-
-    private function relationName(string $field): string
+    protected function resourceFileFields(): array
     {
-        return $field === 'main_visual' ? 'mainVisual' : 'thumbnail';
+        return self::FILE_FIELDS;
     }
 
     /**
