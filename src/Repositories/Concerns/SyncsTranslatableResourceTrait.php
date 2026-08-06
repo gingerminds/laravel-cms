@@ -13,7 +13,6 @@ use Gingerminds\LaravelMultisite\Services\Context\SiteContext;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Str;
 
 trait SyncsTranslatableResourceTrait
@@ -96,20 +95,6 @@ trait SyncsTranslatableResourceTrait
         }
 
         return null;
-    }
-
-    /**
-     * @param  BelongsToMany<Model, Model>  $countries
-     */
-    protected function syncBroadcastCountries(FormRequestInterface $request, BelongsToMany $countries): void
-    {
-        $countriesMode = $request->input('countries_mode', 'none');
-
-        if ($countriesMode === 'none') {
-            $countries->sync([]);
-        } elseif (in_array($countriesMode, ['all', 'custom'], true)) {
-            $countries->sync($request->input('countries', []));
-        }
     }
 
     protected function syncStatus(FormRequestInterface $request, Model $resource): void
