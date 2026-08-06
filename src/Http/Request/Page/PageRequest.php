@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Gingerminds\LaravelCms\Http\Request\Page;
 
 use Closure;
-use Gingerminds\LaravelCms\Blocks\ContentFieldSupport;
 use Gingerminds\LaravelCms\Http\Request\AbstractCmsTranslatableResourceRequest;
 use Gingerminds\LaravelCms\Models\Page\Page;
 use Gingerminds\LaravelCms\Models\Page\PageTranslation;
@@ -19,12 +18,7 @@ class PageRequest extends AbstractCmsTranslatableResourceRequest
 {
     private const array FILE_FIELDS = ['main_visual', 'thumbnail'];
 
-    // `content` isn't in here: it gets its own array/block-schema rules
-    // from contentBlockRules(), not the generic required/nullable string
-    // rule the other optional fields get.
     private const array OPTIONAL_TEXT_FIELDS = ['hook', 'slug'];
-
-    private const string CONTENT_FIELD = 'content';
 
     /** @return array<string, mixed> */
     public function rules(): array
@@ -32,21 +26,12 @@ class PageRequest extends AbstractCmsTranslatableResourceRequest
         /** @var Page|null $page */
         $page = $this->route('page');
 
-        $rules = [
+        return [
             'code' => $this->codeRules($page),
             'category_id' => $this->categoryIdRules($page),
+            ...$this->fileFieldRules(),
+            ...$this->allTranslationRules(),
         ];
-
-        foreach ($this->fileFields() as $field) {
-            $rules[$field]             = $this->fileRule($field);
-            $rules[$field . '_remove'] = ['nullable', 'boolean'];
-        }
-
-        foreach ($this->submittedLanguageIds() as $langId) {
-            $rules = [...$rules, ...$this->translationFieldRules($langId)];
-        }
-
-        return $rules;
     }
 
     /** @return array<int, mixed> */
@@ -96,44 +81,6 @@ class PageRequest extends AbstractCmsTranslatableResourceRequest
         $existingTranslation = $page?->translations->firstWhere('language_id', (int) $langId);
 
         return $existingTranslation?->id;
-    }
-
-    protected function contentFieldName(): ?string
-    {
-        return self::CONTENT_FIELD;
-    }
-
-    protected function contentBlockRules(int|string $langId): array
-    {
-        return ContentFieldSupport::rulesFor(
-            "translations.$langId." . self::CONTENT_FIELD,
-            $this->input("translations.$langId." . self::CONTENT_FIELD, [])
-        );
-    }
-
-    protected function contentBlockAttributes(int|string $langId, string $languageLabel): array
-    {
-        return ContentFieldSupport::attributesFor(
-            "translations.$langId." . self::CONTENT_FIELD,
-            $this->input("translations.$langId." . self::CONTENT_FIELD, []),
-            $languageLabel
-        );
-    }
-
-    /**
-     * The hidden `content` input submits a JSON string (see
-     * `<x-gingerminds-cms::form.inputs.canvas>`); decode it into a PHP
-     * array up front so the cast on `PageTranslation::content` ('array')
-     * doesn't double-encode it later, and so `content.*` rules below can
-     * validate it as a real array. Pruning of stale block fields also
-     * happens here — see `ContentFieldSupport::decodeAndPrune()`.
-     *
-     * @param  array<int|string, array<string, mixed>>  $translations
-     * @return array<int|string, array<string, mixed>>
-     */
-    protected function decodeTranslations(array $translations): array
-    {
-        return ContentFieldSupport::decodeAndPrune($translations, self::CONTENT_FIELD);
     }
 
     protected function translationFieldLabels(): array

@@ -13,8 +13,9 @@ Menus, pages, and a WYSIWYG editor for Laravel projects built on `gingerminds/la
 ## Requirements
 
 - PHP ^8.4
-- `gingerminds/laravel-core` ^3.0
-- `gingerminds/laravel-multisite` ^2.2
+- `gingerminds/laravel-core` ^4.3
+- `gingerminds/laravel-media-manager` ^6.3
+- `gingerminds/laravel-multisite` ^2.10
 
 ## Quick start
 

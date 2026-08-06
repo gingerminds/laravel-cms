@@ -15,9 +15,9 @@
     ],
     "require": {
         "php": "^8.4",
-        "gingerminds/laravel-core": "^4.2",
+        "gingerminds/laravel-core": "^4.3",
         "gingerminds/laravel-media-manager": "^6.3",
-        "gingerminds/laravel-multisite": "^2.9"
+        "gingerminds/laravel-multisite": "^2.10"
     },
     "config": {
         "platform": {
