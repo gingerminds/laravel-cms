@@ -7,7 +7,6 @@ namespace Gingerminds\LaravelCms\Http\Request\Page;
 use Closure;
 use Gingerminds\LaravelCms\Http\Request\AbstractCmsTranslatableResourceRequest;
 use Gingerminds\LaravelCms\Models\Page\Page;
-use Gingerminds\LaravelCms\Models\Page\PageTranslation;
 use Gingerminds\LaravelCms\Models\PageCategory\PageCategory;
 use Gingerminds\LaravelCms\Services\Page\PageCategoryUniquenessValidator;
 use Gingerminds\LaravelCms\Services\Page\PageUrlCollisionValidator;
@@ -23,8 +22,7 @@ class PageRequest extends AbstractCmsTranslatableResourceRequest
     /** @return array<string, mixed> */
     public function rules(): array
     {
-        /** @var Page|null $page */
-        $page = $this->route('page');
+        $page = $this->routeModel();
 
         return [
             'code' => $this->codeRules($page),
@@ -67,20 +65,12 @@ class PageRequest extends AbstractCmsTranslatableResourceRequest
         return 'page_translations';
     }
 
-    /**
-     * Scoped to `(site_id, language_id)`, not globally — two pages in
-     * different categories can never share a slug even though their full
-     * public paths (category prefix + slug) differ; see `docs/Pages.md`.
-     */
-    protected function existingTranslationId(int|string $langId): ?int
+    protected function routeModel(): ?Page
     {
         /** @var Page|null $page */
         $page = $this->route('page');
 
-        /** @var PageTranslation|null $existingTranslation */
-        $existingTranslation = $page?->translations->firstWhere('language_id', (int) $langId);
-
-        return $existingTranslation?->id;
+        return $page;
     }
 
     protected function translationFieldLabels(): array
@@ -97,8 +87,7 @@ class PageRequest extends AbstractCmsTranslatableResourceRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {
-            /** @var Page|null $page */
-            $page = $this->route('page');
+            $page = $this->routeModel();
 
             $categoryId = $this->filled('category_id') ? (int) $this->input('category_id') : null;
             /** @var PageCategory|null $category */

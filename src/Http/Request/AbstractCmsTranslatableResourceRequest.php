@@ -7,12 +7,30 @@ namespace Gingerminds\LaravelCms\Http\Request;
 use Gingerminds\LaravelCms\Http\Request\Concerns\HandlesContentBlocksTrait;
 use Gingerminds\LaravelCms\Http\Request\Concerns\HandlesTranslationFileFieldsTrait;
 use Gingerminds\LaravelMultisite\Http\Requests\AbstractTranslatableResourceRequest;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\Rules\Unique;
 
 abstract class AbstractCmsTranslatableResourceRequest extends AbstractTranslatableResourceRequest
 {
     use HandlesContentBlocksTrait;
     use HandlesTranslationFileFieldsTrait;
+
+    /**
+     * The route-bound model this request edits (e.g. `$this->route('page')`),
+     * covariantly narrowed to the concrete type by each subclass.
+     */
+    abstract protected function routeModel(): ?Model;
+
+    protected function existingTranslationId(int|string $langId): ?int
+    {
+        $model = $this->routeModel();
+
+        /** @var Collection<int, Model>|null $translations */
+        $translations = $model?->getAttribute('translations');
+
+        return $translations?->firstWhere('language_id', (int) $langId)?->getAttribute('id');
+    }
 
     protected function prepareForValidation(): void
     {

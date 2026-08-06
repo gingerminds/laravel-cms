@@ -5,11 +5,15 @@ declare(strict_types=1);
 namespace Gingerminds\LaravelCms\Repositories\Concerns;
 
 use Gingerminds\LaravelCms\Blocks\BlockFileFieldSync;
+use Gingerminds\LaravelCms\State\Page\Status\Published;
 use Gingerminds\LaravelCore\Http\Requests\FormRequestInterface;
 use Gingerminds\LaravelMediaManager\Models\File\File;
 use Gingerminds\LaravelMultisite\Services\Context\LanguageContext;
+use Gingerminds\LaravelMultisite\Services\Context\SiteContext;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Str;
 
 trait SyncsTranslatableResourceTrait
@@ -20,6 +24,8 @@ trait SyncsTranslatableResourceTrait
      * @return list<string>
      */
     abstract protected function resourceFileFields(): array;
+
+    abstract public function getModelClass(): string;
 
     /**
      * @return list<string>
@@ -49,6 +55,61 @@ trait SyncsTranslatableResourceTrait
     protected function relationName(string $field): string
     {
         return Str::camel($field);
+    }
+
+    /**
+     * @param  class-string<Model>  $urlModelClass
+     */
+    protected function findPublishedResourceByPath(
+        string $urlModelClass,
+        string $ownerRelation,
+        string $ownerForeignKey,
+        string $path
+    ): ?Model {
+        $normalizedPath = trim($path, '/');
+        $siteId         = app(SiteContext::class)->site()?->id;
+        $languageIds    = $this->resolveLanguagePreference();
+
+        foreach ($languageIds !== [] ? $languageIds : [null] as $languageId) {
+            /** @var Model|null $urlRow */
+            $urlRow = $urlModelClass::query()
+                ->where('site_id', $siteId)
+                ->where('path', $normalizedPath)
+                ->when($languageId, fn (Builder $query) => $query->where('language_id', $languageId))
+                ->whereHas($ownerRelation, fn (Builder $query) => $query->where('status', Published::class))
+                ->first();
+
+            if ($urlRow !== null) {
+                /** @var class-string<Model> $modelClass */
+                $modelClass = $this->getModelClass();
+
+                /** @var list<string> $eagerLoads */
+                $eagerLoads = $modelClass::getEagerLoads();
+
+                /** @var int|string $ownerId */
+                $ownerId = $urlRow->getAttribute($ownerForeignKey);
+
+                return $modelClass::query()
+                    ->with($eagerLoads)
+                    ->find($ownerId);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  BelongsToMany<Model, Model>  $countries
+     */
+    protected function syncBroadcastCountries(FormRequestInterface $request, BelongsToMany $countries): void
+    {
+        $countriesMode = $request->input('countries_mode', 'none');
+
+        if ($countriesMode === 'none') {
+            $countries->sync([]);
+        } elseif (in_array($countriesMode, ['all', 'custom'], true)) {
+            $countries->sync($request->input('countries', []));
+        }
     }
 
     protected function syncStatus(FormRequestInterface $request, Model $resource): void
