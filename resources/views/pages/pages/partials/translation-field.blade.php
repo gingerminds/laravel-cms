@@ -41,6 +41,8 @@
                     value="{{ old('translations.'.$language->id.'.slug', $translation?->slug) }}"
                     prefix="/{{ $categoryPath }}{{ '' !== $categoryPath ? '/' : '' }}"
                     size="xl"
+                    data-slug-source="#translations_{{ $language->id }}_title"
+                    data-slug-overwrite="{{ $slugOverwrite ? 'true' : 'false' }}"
             />
         </div>
         <div class="row mb-3">

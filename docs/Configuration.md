@@ -65,3 +65,16 @@ Each preset is a named list of TipTap extensions to enable, which controls both 
 Read by `Gingerminds\LaravelCms\Resolver\ResourceResolver`, the same class-binding-override pattern used throughout the other Gingerminds packages. `menu_item`, `page_translation` and `page_category_translation` have no `provider`/`controller`/`request` entries: translation models have no controller of their own (edited inline through their parent's form), and `MenuItem` has no directly callable API operations (see [API](./API.md)). `page_category` has no `provider` — `PageCategory` isn't an API resource at all (see [Pages](./Pages.md)).
 
 > **Project convention:** if your app needs to customize any of these (a controller, request, or model), don't edit the package's own config or classes — override the entry in your app's *published* `config/gingerminds-cms.php` to point at your own class instead (make sure to add the matching `use` import at the top of that file).
+
+## `slug_overwrite`
+
+```php
+'slug_overwrite' => [
+    'create' => true,
+    'edit' => false,
+],
+```
+
+Default `data-slug-overwrite` value for the [slug sync](./Components.md#slug-sync) on `Page`'s `slug` field, resolved in `fields_translations.blade.php` per form context (`create` vs `edit` — whichever key applies is picked based on whether `$page` is set). A page has no slug yet on create, so overwriting as the title changes is harmless; on edit an existing slug is usually already published/indexed, so it's left alone once filled.
+
+A specific view can override this without touching config, by setting `$slugOverwrite` itself in a `@php` block before including `fields_translations.blade.php` — the config value is only used as a fallback (`$slugOverwrite ??= config(...)`).

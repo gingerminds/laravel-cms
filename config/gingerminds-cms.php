@@ -106,6 +106,17 @@ return [
     // Catalog sort weight override, without subclassing: 'title_text' => 5.
     'block_order' => [],
 
+    // Default behaviour of the auto-slug field sync (see docs/Components.md
+    // "Slug sync") when a view doesn't explicitly set $slugOverwrite itself:
+    // whether the slug keeps regenerating from the title after it already
+    // has a value, per form context. A page has no slug yet on create, so
+    // overwriting is harmless; on edit an existing slug is usually already
+    // published/indexed, so it's left alone by default.
+    'slug_overwrite' => [
+        'create' => true,
+        'edit' => false,
+    ],
+
     // Reference field resolvers (ContentReferenceResolver, docs/Blocks.md
     // "API"): field `type` => FQCN implementing `ReferenceFieldResolver`.
     // Merged additively like `block_paths` above — a project adds its own
