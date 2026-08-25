@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!overwrite && target.value) return;
 
                 target.value = slugify(source.value);
-            }, 3000);
+            }, 1000);
         });
     });
 });
