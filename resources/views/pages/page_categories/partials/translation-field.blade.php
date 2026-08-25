@@ -24,6 +24,8 @@
                     suffix="/"
                     :helper="__('gingerminds-cms::translation.page_categories.form.prefix_hint')"
                     size="xl"
+                    data-slug-source="#translations_{{ $language->id }}_name"
+                    data-slug-overwrite="{{ $slugOverwrite ? 'true' : 'false' }}"
             />
         </div>
     </div>
