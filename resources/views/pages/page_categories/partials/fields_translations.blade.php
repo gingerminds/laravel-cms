@@ -15,6 +15,8 @@
     foreach ($languages as $language) {
         $parentPaths[$language->id] = $selectedParent?->getFullPathForLanguage($language->id) ?? '';
     }
+
+    $slugOverwrite ??= config('gingerminds-cms.slug_overwrite.' . (isset($pageCategory) ? 'edit' : 'create'));
 @endphp
 
 <div class="col-lg-12">
@@ -27,7 +29,7 @@
         : []"
                 fields-view="gingerminds-cms::pages.page_categories.partials.translation-field"
                 :default-language="$defaultLanguage"
-                :extra="['parentPaths' => $parentPaths]"
+                :extra="['parentPaths' => $parentPaths, 'slugOverwrite' => $slugOverwrite]"
             />
         </div>
     </div>
