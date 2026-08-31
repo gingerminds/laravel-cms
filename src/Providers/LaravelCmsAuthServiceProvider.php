@@ -5,7 +5,9 @@ namespace Gingerminds\LaravelCms\Providers;
 use Gingerminds\LaravelCms\Policies\Page\PagePolicy;
 use Gingerminds\LaravelCms\Policies\PageCategory\PageCategoryPolicy;
 use Gingerminds\LaravelCms\Resolver\ResourceResolver;
+use Gingerminds\LaravelCore\Resolver\ResourceResolver as CoreResourceResolver;
 use Illuminate\Contracts\Auth\Access\Gate;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Spatie\Permission\PermissionRegistrar;
 
@@ -23,6 +25,13 @@ class LaravelCmsAuthServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Defensive: pins the same 'user' morph alias as gingerminds-core so
+        // model_has_roles/model_has_permissions stay consistent regardless of
+        // provider boot order.
+        Relation::morphMap([
+            'user' => CoreResourceResolver::model('user'),
+        ]);
+
         $this
             ->app
             ->make(Gate::class)
