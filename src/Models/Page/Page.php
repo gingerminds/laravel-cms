@@ -31,6 +31,7 @@ use Symfony\Component\Serializer\Attribute\SerializedName;
 use Symfony\Component\TypeInfo\Type\BuiltinType;
 use Symfony\Component\TypeInfo\Type\CollectionType;
 use Symfony\Component\TypeInfo\Type\GenericType;
+use Symfony\Component\TypeInfo\Type\NullableType;
 use Symfony\Component\TypeInfo\TypeIdentifier;
 
 /**
@@ -82,9 +83,22 @@ use Symfony\Component\TypeInfo\TypeIdentifier;
     Page::GROUP_LIST,
     Page::GROUP_READ,
 ]))]
-#[ApiProperty(property: 'content', serialize: new Groups([
-    Page::GROUP_READ,
-]))]
+#[ApiProperty(
+    property: 'content',
+    serialize: new Groups([
+        Page::GROUP_READ,
+    ]),
+    nativeType: new NullableType(
+        new CollectionType(
+            new GenericType(
+                new BuiltinType(TypeIdentifier::ARRAY),
+                new BuiltinType(TypeIdentifier::INT),
+                new BuiltinType(TypeIdentifier::MIXED),
+            ),
+            true,
+        ),
+    ),
+)]
 #[ApiProperty(property: 'slug', serialize: new Groups([
     Page::GROUP_LIST,
     Page::GROUP_READ,
