@@ -2,6 +2,8 @@
 
 namespace Gingerminds\LaravelCms\Providers;
 
+use Gingerminds\LaravelCms\Policies\Menu\MenuItemPolicy;
+use Gingerminds\LaravelCms\Policies\Menu\MenuPolicy;
 use Gingerminds\LaravelCms\Policies\Page\PagePolicy;
 use Gingerminds\LaravelCms\Policies\PageCategory\PageCategoryPolicy;
 use Gingerminds\LaravelCms\Resolver\ResourceResolver;
@@ -41,6 +43,16 @@ class LaravelCmsAuthServiceProvider extends ServiceProvider
             ->app
             ->make(Gate::class)
             ->policy(ResourceResolver::model('page_category'), PageCategoryPolicy::class);
+
+        $this
+            ->app
+            ->make(Gate::class)
+            ->policy(ResourceResolver::model('menu'), MenuPolicy::class);
+
+        $this
+            ->app
+            ->make(Gate::class)
+            ->policy(ResourceResolver::model('menu_item'), MenuItemPolicy::class);
 
         $this->registerPolicies();
 
