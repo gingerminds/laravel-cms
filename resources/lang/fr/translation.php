@@ -13,7 +13,8 @@ return [
         'hook' => 'Accroche',
         'published_at' => 'Publié le',
         'archived_at' => 'Archivé le',
-        'status' => 'Statut'
+        'status' => 'Statut',
+        'is_hidden_from_search' => 'Masqué de la recherche',
     ],
 
     'menus' => [

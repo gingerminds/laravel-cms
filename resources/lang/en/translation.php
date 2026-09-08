@@ -13,7 +13,8 @@ return [
         'hook' => 'Hook',
         'published_at' => 'Published At',
         'archived_at' => 'Archived At',
-        'status' => 'Status'
+        'status' => 'Status',
+        'is_hidden_from_search' => 'Hidden from search',
     ],
 
     'menus' => [

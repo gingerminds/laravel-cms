@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Gingerminds\LaravelCms\ApiProvider\Page\PageProvider;
+use Gingerminds\LaravelCms\ApiProvider\Search\SearchProvider;
 use Gingerminds\LaravelCms\Blocks\Reference\FileReferenceResolver;
 use Gingerminds\LaravelCms\Blocks\Reference\MediaReferenceResolver;
 use Gingerminds\LaravelCms\Http\Controllers\Menu\MenuController;
@@ -24,6 +25,9 @@ use Gingerminds\LaravelCms\ApiProvider\Menu\MenuProvider;
 use Gingerminds\LaravelCms\Http\Request\Menu\MenuRequest;
 use Gingerminds\LaravelCms\Repositories\Page\PageRepository;
 use Gingerminds\LaravelCms\Repositories\PageCategory\PageCategoryRepository;
+use Gingerminds\LaravelCms\Repositories\Search\SearchRepository;
+use Gingerminds\LaravelCms\Models\Search\SearchIndex;
+use Gingerminds\LaravelCms\ApiProvider\Search\SearchResultProvider;
 
 return [
     'wysiwyg' => [
@@ -79,12 +83,18 @@ return [
         'page_block' => [
             'controller' => \Gingerminds\LaravelCms\Http\Controllers\Page\PageBlockController::class,
         ],
+        'search' => [
+            'model' => SearchIndex::class,
+            'repository' => SearchRepository::class,
+            'provider' => SearchProvider::class,
+        ],
+        'search_result' => [
+            'model' => SearchIndex::class,
+            'repository' => SearchRepository::class,
+            'provider' => SearchResultProvider::class,
+        ],
     ],
 
-    // Content blocks (see docs/Blocks.md). Merged additively at boot time in
-    // LaravelCmsServiceProvider so a project publishing this config only
-    // needs to list what it *adds* — the package's own entries are never
-    // silently dropped by Laravel's shallow mergeConfigFrom().
     'block_paths' => [
         [
             'path' => dirname(__DIR__) . '/src/Blocks/Type',
@@ -96,34 +106,29 @@ return [
         ],
     ],
 
-    // Override an existing block class by key: 'title_text' => \App\Cms\Blocks\TitleText::class.
     'blocks' => [],
 
-    // Block keys hidden from the catalog (step 1 of the add-block modal).
-    // Existing pages using a disabled block still render/validate fine.
     'disabled_blocks' => [],
 
-    // Catalog sort weight override, without subclassing: 'title_text' => 5.
     'block_order' => [],
 
-    // Default behaviour of the auto-slug field sync (see docs/Components.md
-    // "Slug sync") when a view doesn't explicitly set $slugOverwrite itself:
-    // whether the slug keeps regenerating from the title after it already
-    // has a value, per form context. A page has no slug yet on create, so
-    // overwriting is harmless; on edit an existing slug is usually already
-    // published/indexed, so it's left alone by default.
     'slug_overwrite' => [
         'create' => true,
         'edit' => false,
     ],
 
-    // Reference field resolvers (ContentReferenceResolver, docs/Blocks.md
-    // "API"): field `type` => FQCN implementing `ReferenceFieldResolver`.
-    // Merged additively like `block_paths` above — a project adds its own
-    // reference field type (e.g. a field pointing to one of its own
-    // models) without losing `file`/`media`.
     'reference_resolvers' => [
         'file'  => FileReferenceResolver::class,
         'media' => MediaReferenceResolver::class,
+    ],
+
+    'search_resources' => [
+        'page' => [
+            'model' => Page::class,
+            'label' => 'Pages',
+            'category_relation' => 'category',
+            'category_model' => PageCategory::class,
+            'group' => Page::GROUP_LIST,
+        ],
     ],
 ];
