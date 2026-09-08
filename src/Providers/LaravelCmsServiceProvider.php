@@ -7,13 +7,17 @@ namespace Gingerminds\LaravelCms\Providers;
 use ApiPlatform\State\ProviderInterface;
 use Gingerminds\LaravelCms\ApiProvider\Menu\MenuProvider;
 use Gingerminds\LaravelCms\ApiProvider\Page\PageProvider;
+use Gingerminds\LaravelCms\ApiProvider\Search\SearchProvider;
+use Gingerminds\LaravelCms\ApiProvider\Search\SearchResultProvider;
 use Gingerminds\LaravelCms\Console\Commands\Make\CreateBlock;
+use Gingerminds\LaravelCms\Console\Commands\Search\ReindexSearchCommand;
 use Gingerminds\LaravelCms\Http\Controllers\Menu\MenuController;
 use Gingerminds\LaravelCms\Http\Controllers\Menu\MenuItemController;
 use Gingerminds\LaravelCms\Http\Controllers\Page\PageBlockController;
 use Gingerminds\LaravelCms\Http\Controllers\Page\PageController;
 use Gingerminds\LaravelCms\Http\Controllers\PageCategory\PageCategoryController;
 use Gingerminds\LaravelCms\Http\Middleware\Api\InjectPageFiltersMiddleware;
+use Gingerminds\LaravelCms\Http\Middleware\Api\InjectSearchFiltersMiddleware;
 use Gingerminds\LaravelCms\Http\Request\Menu\MenuItemRequest;
 use Gingerminds\LaravelCms\Http\Request\Menu\MenuRequest;
 use Gingerminds\LaravelCms\Http\Request\Page\PageRequest;
@@ -24,11 +28,19 @@ use Gingerminds\LaravelCms\Models\Page\Page;
 use Gingerminds\LaravelCms\Models\Page\PageTranslation;
 use Gingerminds\LaravelCms\Models\PageCategory\PageCategory;
 use Gingerminds\LaravelCms\Models\PageCategory\PageCategoryTranslation;
+use Gingerminds\LaravelCms\Models\Search\SearchIndex;
+use Gingerminds\LaravelCms\Observers\Search\SearchExclusionCascadeObserver;
+use Gingerminds\LaravelCms\Observers\Search\SearchIndexObserver;
+use Gingerminds\LaravelCms\Repositories\Filters\Handlers\SearchFacetFilterHandler;
 use Gingerminds\LaravelCms\Repositories\Menu\MenuItemRepository;
 use Gingerminds\LaravelCms\Repositories\Menu\MenuRepository;
 use Gingerminds\LaravelCms\Repositories\Page\PageRepository;
 use Gingerminds\LaravelCms\Repositories\PageCategory\PageCategoryRepository;
+use Gingerminds\LaravelCms\Repositories\Search\SearchRepository;
 use Gingerminds\LaravelCms\Resolver\ResourceResolver;
+use Gingerminds\LaravelCms\Services\Page\PageFilterStore;
+use Gingerminds\LaravelCms\Services\Search\SearchFilterStore;
+use Gingerminds\LaravelCore\Repositories\Filters\FilterHandlerRegistry;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use RecursiveDirectoryIterator;
@@ -50,8 +62,29 @@ class LaravelCmsServiceProvider extends ServiceProvider
         $this->mergeAdditiveArrayConfig('disabled_blocks');
         $this->mergeAdditiveArrayConfig('block_paths', 'path');
         $this->mergeAdditiveArrayConfig('reference_resolvers', associative: true);
+        $this->mergeAdditiveArrayConfig('search_resources', associative: true);
 
         $this->bindResources();
+
+        // Shared across a single request between an ApiProvider (which
+        // computes the filters) and the Inject*FiltersMiddleware that reads
+        // them back to merge into the response — without singleton() each
+        // side gets its own instance and the middleware only ever sees an
+        // empty store.
+        $this->app->singleton(PageFilterStore::class);
+        $this->app->singleton(SearchFilterStore::class);
+
+        // extend(), not a direct app(FilterHandlerRegistry::class)->register()
+        // call: the registry is bound lazily by LaravelCoreServiceProvider (a
+        // closure pre-registering the built-in handlers), and this provider's
+        // register() can run before or after that one — extend() defers until
+        // whichever binding resolves it first, so the built-ins are always in
+        // place before 'facet' is added on top.
+        $this->app->extend(FilterHandlerRegistry::class, function (FilterHandlerRegistry $registry) {
+            $registry->register('facet', new SearchFacetFilterHandler());
+
+            return $registry;
+        });
 
         $this->tagClassesFromPath(
             __DIR__ . '/../ApiProvider',
@@ -59,16 +92,10 @@ class LaravelCmsServiceProvider extends ServiceProvider
             ProviderInterface::class
         );
 
-        // Le package s'enregistre lui-même auprès d'api-platform : le projet
-        // consommateur n'a rien à ajouter dans son config/api-platform.php.
-        // Fait dans register() (et non boot()) : tous les register() tournent
-        // avant tous les boot(), donc cette valeur est garantie disponible
-        // avant que le provider api-platform ne construise ses routes dans
-        // son propre boot(), quel que soit l'ordre de boot entre packages.
         config([
             'api-platform.routes.middleware' => array_values(array_unique(array_merge(
                 config('api-platform.routes.middleware', []),
-                [InjectPageFiltersMiddleware::class]
+                [InjectPageFiltersMiddleware::class, InjectSearchFiltersMiddleware::class]
             ))),
         ]);
     }
@@ -90,6 +117,9 @@ class LaravelCmsServiceProvider extends ServiceProvider
 
         // Chargement des migrations
         $this->loadMigrationsFrom(__DIR__ . '/../../database/migrations');
+
+        ResourceResolver::model('page')::observe(SearchIndexObserver::class);
+        ResourceResolver::model('page_category')::observe(SearchExclusionCascadeObserver::class);
 
         // Chargement des vues
         $this->loadViewsFrom(
@@ -128,6 +158,7 @@ class LaravelCmsServiceProvider extends ServiceProvider
 
             $this->commands([
                 CreateBlock::class,
+                ReindexSearchCommand::class,
             ]);
         }
     }
@@ -246,25 +277,25 @@ class LaravelCmsServiceProvider extends ServiceProvider
             PageBlockController::class,
             ResourceResolver::controller('page_block')
         );
+
+        $this->app->bind(
+            SearchRepository::class,
+            ResourceResolver::repository('search')
+        );
+        $this->app->bind(
+            SearchIndex::class,
+            ResourceResolver::model('search')
+        );
+        $this->app->bind(
+            SearchProvider::class,
+            ResourceResolver::provider('search')
+        );
+        $this->app->bind(
+            SearchResultProvider::class,
+            ResourceResolver::provider('search_result')
+        );
     }
 
-    /**
-     * `mergeConfigFrom()` only merges shallowly: a top-level array key
-     * present in a project's published config completely replaces the
-     * package's default for that key, instead of extending it (see
-     * docs/Blocks.md). Re-merges one array key on top of that, combining
-     * the package's own default entries with whatever the project's
-     * published config now holds — additive, not "either/or".
-     *
-     * Three shapes are supported, one per existing config key: a flat list
-     * of scalars deduplicated as a set (`disabled_blocks`), a list of
-     * assoc arrays deduplicated by one of their columns (`block_paths`,
-     * `$uniqueBy: 'path'`), and a plain keyed map where a published key
-     * simply overrides the package's default for that key
-     * (`reference_resolvers`, `$associative: true` — `array_merge()`
-     * already does exactly that, no dedup/reindex needed/wanted since string
-     * keys aren't reindexed by it).
-     */
     private function mergeAdditiveArrayConfig(string $key, ?string $uniqueBy = null, bool $associative = false): void
     {
         $default   = $this->packageConfigDefaults()[$key] ?? [];
@@ -291,19 +322,6 @@ class LaravelCmsServiceProvider extends ServiceProvider
     }
 
     /**
-     * The package's own, un-overridden config array — `mergeAdditiveArrayConfig()`
-     * needs it as-is, but by the time it runs, `mergeConfigFrom()` (see
-     * `register()`) has already shallow-replaced this same key in Laravel's
-     * config repository with the project's published value, so reading it
-     * back via `config('gingerminds-cms...')` won't do.
-     *
-     * Loaded through a single, memoized call site instead of a `require`
-     * inline in `mergeAdditiveArrayConfig()`: that used to be a
-     * `require_once` called once per config key (three times total), which
-     * only returns the file's array on the *first* of those calls — every
-     * call after that silently got `1` instead, and `$default` ended up
-     * empty for two of the three keys.
-     *
      * @return array<string, mixed>
      */
     private function packageConfigDefaults(): array

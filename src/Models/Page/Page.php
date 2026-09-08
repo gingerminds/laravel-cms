@@ -8,10 +8,14 @@ use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Link;
 use Gingerminds\LaravelCms\ApiProvider\Page\PageProvider;
+use Gingerminds\LaravelCms\Models\Contract\ExcludableFromSearchInterface;
+use Gingerminds\LaravelCms\Models\Contract\PubliclySearchableInterface;
 use Gingerminds\LaravelCms\Models\PageCategory\PageCategory;
+use Gingerminds\LaravelCms\Models\Trait\ExcludableFromSearchTrait;
 use Gingerminds\LaravelCms\Models\Trait\HasMainVisualAndThumbnailTrait;
 use Gingerminds\LaravelCms\Models\Trait\HasResolvedContentTrait;
 use Gingerminds\LaravelCms\Models\Trait\HasStatusLabelTrait;
+use Gingerminds\LaravelCms\State\Page\Status\Published;
 use Gingerminds\LaravelCms\State\Page\StatusState;
 use Gingerminds\LaravelCore\Models\CacheableResourceInterface;
 use Gingerminds\LaravelCore\Models\EagerLoadableModelInterface;
@@ -143,10 +147,13 @@ class Page extends Model implements
     FilterableModelInterface,
     SearchableModelInterface,
     EagerLoadableModelInterface,
-    CacheableResourceInterface
+    CacheableResourceInterface,
+    PubliclySearchableInterface,
+    ExcludableFromSearchInterface
 {
     use CacheableResourceTrait;
     use EagerLoadableModelTrait;
+    use ExcludableFromSearchTrait;
     use HasMainVisualAndThumbnailTrait;
     use HasResolvedContentTrait;
     use HasStates;
@@ -157,10 +164,6 @@ class Page extends Model implements
     protected string $translationModel = PageTranslation::class;
 
     /**
-     * `main_visual_file`/`thumbnail_file` (HasMainVisualAndThumbnailTrait) and
-     * `category` (walked all the way to the root for `full_path`/`switch_lang`
-     * via `PageCategory::parentChain()`) all lazy-load per row otherwise.
-     *
      * @return array<int, string>
      */
     public static function getEagerLoads(): array
@@ -178,6 +181,7 @@ class Page extends Model implements
      */
     protected $casts = [
         'status' => StatusState::class,
+        'is_hidden_from_search' => 'boolean',
     ];
 
     public const string GROUP_LIST = 'pages:list';
@@ -197,6 +201,7 @@ class Page extends Model implements
             'archived_at',
             'site_id',
             'category_id',
+            'is_hidden_from_search',
         ];
     }
 
@@ -306,5 +311,40 @@ class Page extends Model implements
     public static function getSearchableFields(): array
     {
         return ['code', 'translations.title'];
+    }
+
+    /**
+     * @return iterable<array{language_id: int, title: string, url: string, excerpt: string|null, searchable_text: string}>
+     */
+    public function getPublicSearchTranslations(): iterable
+    {
+        /** @var Collection<int, PageTranslation> $translations */
+        $translations = $this->translations;
+
+        foreach ($translations as $translation) {
+            if (null === $translation->title || '' === $translation->title) {
+                continue;
+            }
+
+            $categoryPath = $this->category?->getFullPathForLanguage($translation->language_id) ?? '';
+
+            yield [
+                'language_id' => $translation->language_id,
+                'title' => $translation->title,
+                'url' => self::composePath($categoryPath, $translation->slug ?? ''),
+                'excerpt' => $translation->hook,
+                'searchable_text' => $translation->title,
+            ];
+        }
+    }
+
+    public function isPubliclyVisible(): bool
+    {
+        return $this->status instanceof Published;
+    }
+
+    protected function searchExclusionParentRelation(): ?string
+    {
+        return 'category';
     }
 }

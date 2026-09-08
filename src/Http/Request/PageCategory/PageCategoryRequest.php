@@ -30,6 +30,7 @@ class PageCategoryRequest extends FormRequest implements FormRequestInterface
             'code' => $this->codeRules($siteId, $category),
             'parent_id' => $this->parentIdRules($siteId, $category),
             'is_unique' => ['nullable', 'boolean'],
+            'is_hidden_from_search' => ['nullable', 'boolean'],
         ];
 
         $defaultLanguageId = app(SiteContext::class)->site()?->defaultLanguage()->first()?->id;

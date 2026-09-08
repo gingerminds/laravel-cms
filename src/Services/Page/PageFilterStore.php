@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Gingerminds\LaravelCms\Services\Page;
 
-class PageFilterStore
+use Gingerminds\LaravelCms\Services\Filters\FilterStoreInterface;
+
+class PageFilterStore implements FilterStoreInterface
 {
     /** @var array<string, array{type: string, options: list<array{value: int|string, label: string, total: int}>}> */
     private array $filters = [];

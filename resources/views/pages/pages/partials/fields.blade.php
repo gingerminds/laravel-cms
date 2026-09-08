@@ -35,6 +35,17 @@
             </div>
         </div>
     </div>
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <x-gingerminds-core::form.inputs.toggle
+                        id="is_hidden_from_search"
+                        :label="__('gingerminds-cms::translation.form.is_hidden_from_search')"
+                        :checked="old('is_hidden_from_search', isset($page) && $page->is_hidden_from_search)"
+                />
+            </div>
+        </div>
+    </div>
 </div>
 <div class="col-lg-4">
     <div class="card">
