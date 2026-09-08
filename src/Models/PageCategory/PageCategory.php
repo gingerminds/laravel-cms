@@ -3,7 +3,9 @@
 namespace Gingerminds\LaravelCms\Models\PageCategory;
 
 use ApiPlatform\Metadata\ApiResource;
+use Gingerminds\LaravelCms\Models\Contract\ExcludableFromSearchInterface;
 use Gingerminds\LaravelCms\Models\Page\Page;
+use Gingerminds\LaravelCms\Models\Trait\ExcludableFromSearchTrait;
 use Gingerminds\LaravelCore\Models\CacheableResourceInterface;
 use Gingerminds\LaravelCore\Models\CacheCascadeInterface;
 use Gingerminds\LaravelCore\Models\EagerLoadableModelInterface;
@@ -30,10 +32,12 @@ class PageCategory extends Model implements
     ResourceModelInterface,
     EagerLoadableModelInterface,
     CacheableResourceInterface,
-    CacheCascadeInterface
+    CacheCascadeInterface,
+    ExcludableFromSearchInterface
 {
     use CacheableResourceTrait;
     use EagerLoadableModelTrait;
+    use ExcludableFromSearchTrait;
     use SiteContextedModelTrait;
     use TranslatableModelTrait;
 
@@ -44,6 +48,7 @@ class PageCategory extends Model implements
      */
     protected $casts = [
         'is_unique' => 'boolean',
+        'is_hidden_from_search' => 'boolean',
     ];
 
     /**
@@ -85,6 +90,7 @@ class PageCategory extends Model implements
             'parent_id',
             'site_id',
             'is_unique',
+            'is_hidden_from_search',
         ];
     }
 
@@ -97,12 +103,6 @@ class PageCategory extends Model implements
     }
 
     /**
-     * Recursive eager-load for `getFullPathForLanguage()`'s upward walk —
-     * same self-referential `->with()` trick as `adminChildren()`, just
-     * walking `parent_id` instead of walking children. Terminates on its own
-     * once a row with a null `parent_id` is reached (root), the same way
-     * `adminChildren` terminates once a row has no children.
-     *
      * @return BelongsTo<PageCategory, $this>
      */
     public function parentChain(): BelongsTo
@@ -171,9 +171,6 @@ class PageCategory extends Model implements
                 $segments[] = $prefix;
             }
 
-            // `parentChain`, not `parent`: pre-loaded recursively (see
-            // Page::getEagerLoads()/PageCategory::getEagerLoads()) so walking
-            // to the root never triggers a lazy load, however deep the tree.
             $category = $category->parentChain;
         }
 

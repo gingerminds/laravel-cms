@@ -17,6 +17,13 @@
                         :checked="old('is_unique', isset($pageCategory) && $pageCategory->is_unique)"
                 />
             </div>
+            <div class="row">
+                <x-gingerminds-core::form.inputs.toggle
+                        id="is_hidden_from_search"
+                        :label="__('gingerminds-cms::translation.form.is_hidden_from_search')"
+                        :checked="old('is_hidden_from_search', isset($pageCategory) && $pageCategory->is_hidden_from_search)"
+                />
+            </div>
         </div>
     </div>
 </div>

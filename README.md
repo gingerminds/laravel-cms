@@ -9,6 +9,7 @@ Menus, pages, and a WYSIWYG editor for Laravel projects built on `gingerminds/la
 - A content block system for `PageTranslation::content` (schema-driven blocks, extensible/overridable per project), with a reference "Title + Text" block.
 - A TipTap-based WYSIWYG editor Blade component, with configurable toolbar presets.
 - A read-only API exposing menus and their active item tree, plus pages (by id, by path, or by code).
+- A cross-content search index (`search_index`), extensible to a project's own content types, exposed as two read-only API endpoints — see [Search](docs/Search.md).
 
 ## Requirements
 
@@ -36,4 +37,5 @@ Then register the package's models with API Platform (see [Installation](docs/In
 - [Menus](docs/Menus.md) — models, admin screens, drag-and-drop reordering
 - [Pages](docs/Pages.md) — models, home-page semantics, admin screens, filters
 - [Blocks](docs/Blocks.md) — content block contract, registry, admin editing flow
+- [Search](docs/Search.md) — cross-content search index, contracts, registering a new content type, API endpoints
 - [API](docs/API.md) — admin routes and API Platform endpoints

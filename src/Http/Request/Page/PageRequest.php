@@ -27,6 +27,7 @@ class PageRequest extends AbstractCmsTranslatableResourceRequest
         return [
             'code' => $this->codeRules($page),
             'category_id' => $this->categoryIdRules($page),
+            'is_hidden_from_search' => ['nullable', 'boolean'],
             ...$this->fileFieldRules(),
             ...$this->allTranslationRules(),
         ];
