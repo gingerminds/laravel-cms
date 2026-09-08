@@ -21,25 +21,31 @@ trait ExcludableFromSearchTrait
             return false;
         }
 
-        $related = $this->relationLoaded($relationName)
+        return $this->isSearchExclusionParentExcluded(
+            $this->resolveSearchExclusionParent($relationName)
+        );
+    }
+
+    protected function searchExclusionParentRelation(): ?string
+    {
+        return null;
+    }
+
+    private function resolveSearchExclusionParent(string $relationName): mixed
+    {
+        return $this->relationLoaded($relationName)
             ? $this->getRelation($relationName)
             : $this->{$relationName}()->getResults();
+    }
 
+    private function isSearchExclusionParentExcluded(mixed $related): bool
+    {
         if ($related instanceof EloquentCollection) {
             return $related->isNotEmpty() && $related->every(
                 fn ($item) => $item instanceof ExcludableFromSearchInterface && $item->isExcludedFromSearch()
             );
         }
 
-        if ($related instanceof ExcludableFromSearchInterface) {
-            return $related->isExcludedFromSearch();
-        }
-
-        return false;
-    }
-
-    protected function searchExclusionParentRelation(): ?string
-    {
-        return null;
+        return $related instanceof ExcludableFromSearchInterface && $related->isExcludedFromSearch();
     }
 }
