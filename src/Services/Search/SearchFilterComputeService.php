@@ -6,6 +6,7 @@ namespace Gingerminds\LaravelCms\Services\Search;
 
 use Gingerminds\LaravelCms\Models\Search\SearchIndex;
 use Gingerminds\LaravelCms\Repositories\Search\SearchRepository;
+use Gingerminds\LaravelMultisite\Services\Context\LanguageContext;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
@@ -27,6 +28,7 @@ class SearchFilterComputeService
 {
     public function __construct(
         private readonly SearchRepository $repository,
+        private readonly LanguageContext $languageContext,
     ) {
     }
 
@@ -77,7 +79,7 @@ class SearchFilterComputeService
             if ($total > 0 || $isSelected) {
                 $result[] = [
                     'value' => $type,
-                    'label' => (string) ($definition['label'] ?? $type),
+                    'label' => __((string) ($definition['label'] ?? $type), [], $this->resolveLocale()),
                     'total' => $total,
                     'group' => null,
                 ];
@@ -130,6 +132,13 @@ class SearchFilterComputeService
         }
 
         return $options;
+    }
+
+    private function resolveLocale(): ?string
+    {
+        $language = $this->languageContext->current() ?? $this->languageContext->fallback();
+
+        return $language?->iso;
     }
 
     /**
