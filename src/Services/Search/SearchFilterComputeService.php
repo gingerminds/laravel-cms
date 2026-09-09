@@ -102,7 +102,7 @@ class SearchFilterComputeService
      * @param list<int> $selectedCategoryIdsForType
      * @return list<array{value: string, label: string, total: int, group: string|null}>
      */
-    private function computeCategoryOptions(
+    protected function computeCategoryOptions(
         string $type,
         array $definition,
         array $categoryTotalsForType,
