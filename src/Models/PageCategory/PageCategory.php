@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  *
+ * @property string $code
  * @property int<0, max>|null $site_id
  * @property int|null $parent_id
  * @property bool $is_unique

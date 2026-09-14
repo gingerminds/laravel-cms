@@ -219,6 +219,28 @@ class PageRepository extends AbstractRepository implements RepositoryInterface
     }
 
     /**
+     * Counts pages per category, applying all other active filters. A page
+     * with no category is never counted (mirrors `getStatusFacetCounts()`'s
+     * "one row per possible value" shape, but `category_id` is nullable and
+     * an unset category has no facet option to belong to).
+     *
+     * @return Collection<int, object{category_id: int, total: int}>
+     */
+    public function getCategoryFacetCounts(): Collection
+    {
+        /** @var Collection<int, object{category_id: int, total: int}> $results */
+        $results = $this->buildFacetedQuery(['category_id'])
+            ->toBase()
+            ->whereNotNull('pages.category_id')
+            ->select('pages.category_id', DB::raw('COUNT(*) as total'))
+            ->groupBy('pages.category_id')
+            ->get()
+            ->keyBy('category_id');
+
+        return $results;
+    }
+
+    /**
      * @param Builder<Page> $query
      * @param array<mixed> $filters
      */
