@@ -9,6 +9,7 @@ use Gingerminds\LaravelCms\Http\Request\Concerns\HandlesTranslationFileFieldsTra
 use Gingerminds\LaravelMultisite\Http\Requests\AbstractTranslatableResourceRequest;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Unique;
 
 abstract class AbstractCmsTranslatableResourceRequest extends AbstractTranslatableResourceRequest
@@ -37,6 +38,36 @@ abstract class AbstractCmsTranslatableResourceRequest extends AbstractTranslatab
         $this->merge([
             'translations' => $this->decodeTranslations($this->input('translations', [])),
         ]);
+
+        $this->fillMissingTranslationSlugs($this->slugSourceField());
+    }
+
+    /**
+     * The translation field a blank `slug` is generated from (e.g. `title`).
+     */
+    protected function slugSourceField(): string
+    {
+        return 'title';
+    }
+
+    /**
+     * Fills a translation's `slug` from {@see slugSourceField()} when
+     * submitted blank, so editors no longer have to type it by hand. Never
+     * overwrites a slug the user did fill in.
+     */
+    protected function fillMissingTranslationSlugs(string $sourceField): void
+    {
+        $translations = $this->input('translations', []);
+
+        foreach ($translations as $langId => $fields) {
+            if (blank($fields[$sourceField] ?? null) || filled($fields['slug'] ?? null)) {
+                continue;
+            }
+
+            $translations[$langId]['slug'] = Str::slug($fields[$sourceField]);
+        }
+
+        $this->merge(['translations' => $translations]);
     }
 
     /**
