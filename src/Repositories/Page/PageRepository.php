@@ -7,6 +7,7 @@ namespace Gingerminds\LaravelCms\Repositories\Page;
 use Gingerminds\LaravelCms\Models\Page\Page;
 use Gingerminds\LaravelCms\Models\Page\PageUrl;
 use Gingerminds\LaravelCms\Repositories\Concerns\SyncsTranslatableResourceTrait;
+use Gingerminds\LaravelCms\Repositories\Concerns\UpdatesPublishableCmsResourceTrait;
 use Gingerminds\LaravelCms\Resolver\ResourceResolver;
 use Gingerminds\LaravelCms\Services\Page\PageUrlSyncer;
 use Gingerminds\LaravelCms\State\Page\Status\Published;
@@ -30,6 +31,7 @@ use InvalidArgumentException;
 class PageRepository extends AbstractRepository implements RepositoryInterface
 {
     use SyncsTranslatableResourceTrait;
+    use UpdatesPublishableCmsResourceTrait;
 
     private const array FILE_FIELDS = ['main_visual', 'thumbnail'];
 
@@ -68,30 +70,6 @@ class PageRepository extends AbstractRepository implements RepositoryInterface
                 ->first();
 
             if (null !== $pageUrl) {
-                // Not `$pageUrl->page`: that relation is declared on
-                // `PageUrl` itself as `belongsTo(Page::class)`, hardcoded to
-                // this package's own `Page` class — it can't know about a
-                // project's resolved override (`ResourceResolver::model('page')`,
-                // same mechanism `getModelClass()` already uses everywhere
-                // else in this repository). Re-fetching explicitly through
-                // the resolved class is what actually respects a project's
-                // `App\Models\Page\Page`-style override (e.g. a customized
-                // `getContentAttribute()`).
-                // Bypasses AbstractRepository::get() (single lookup by
-                // resolved URL, not a paginated listing), so getEagerLoads()
-                // is merged in by hand here — otherwise every relation it
-                // declares (mainVisual, thumbnail, category.parentChain)
-                // lazy-loads instead.
-                // The `@var class-string<Page>` above is a local assertion for
-                // this method's own type-checking, not a runtime guarantee:
-                // `$modelClass` actually comes from `ResourceResolver::model()`,
-                // which just reads a config string — a project could point
-                // `gingerminds-cms.resources.page.model` at a class that
-                // doesn't extend this package's `Page` (and so doesn't pick up
-                // `EagerLoadableModelInterface` from it). Real `Page` subtypes
-                // will always pass this check, hence PHPStan flags it as
-                // always-true, but it's what keeps a misconfigured override
-                // from fataling here instead of just skipping eager loads.
                 // @phpstan-ignore function.alreadyNarrowedType
                 $with = is_subclass_of($modelClass, EagerLoadableModelInterface::class)
                     ? $modelClass::getEagerLoads()
@@ -135,25 +113,16 @@ class PageRepository extends AbstractRepository implements RepositoryInterface
             return $resourceModel;
         }
 
-        $resourceModel->fill($request->except(['status', 'category_id']));
-        $resourceModel->site_id = app(SiteContext::class)->site()?->id;
-        // `max(0, ...)`, not a plain `(int)` cast: `Page::$category_id` is
-        // typed `int<0, max>|null` (an unsigned FK column), but a bare
-        // `(int)` cast is a full-range `int` as far as PHPStan is
-        // concerned — `max()` with a literal `0` lower bound is enough for
-        // it to narrow the result back down to a non-negative int.
-        $resourceModel->category_id = $request->filled('category_id')
-            ? max(0, (int) $request->input('category_id'))
-            : null;
-
-        foreach (self::FILE_FIELDS as $field) {
-            $this->syncResourceFile($request, $resourceModel, $field);
-        }
-
-        $this->syncStatus($request, $resourceModel);
-
-        $resourceModel->syncTranslations(
-            $this->prepareTranslations($request, $resourceModel)
+        $this->updatePublishableResource(
+            $request,
+            $resourceModel,
+            self::FILE_FIELDS,
+            function () use ($request, $resourceModel) {
+                $resourceModel->category_id = $request->filled('category_id')
+                    ? max(0, (int) $request->input('category_id'))
+                    : null;
+                $resourceModel->save();
+            },
         );
 
         $this->urlSyncer->syncPage($resourceModel);
@@ -219,11 +188,6 @@ class PageRepository extends AbstractRepository implements RepositoryInterface
     }
 
     /**
-     * Counts pages per category, applying all other active filters. A page
-     * with no category is never counted (mirrors `getStatusFacetCounts()`'s
-     * "one row per possible value" shape, but `category_id` is nullable and
-     * an unset category has no facet option to belong to).
-     *
      * @return Collection<int, object{category_id: int, total: int}>
      */
     public function getCategoryFacetCounts(): Collection

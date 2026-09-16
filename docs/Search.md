@@ -280,16 +280,24 @@ never gets any row here.
   Category labels are resolved from `search_resources.<key>.category_model`
   — **required** for a type that declares a `category_relation`; without it,
   a category option's `label` silently falls back to its raw numeric id.
-- **`Services/Search/SearchFilterStore.php`** — a request-scoped singleton
-  holding the last-computed filters, written by `SearchResultProvider` and
-  read back by `InjectSearchFiltersMiddleware` (bound `singleton()` in
-  `LaravelCmsServiceProvider::register()` — without that, each side gets its
-  own instance and the middleware only ever sees an empty store).
-- **`Http/Middleware/Api/InjectSearchFiltersMiddleware.php`** — registered
-  globally onto every api-platform route
+- **`Services/Search/SearchFilterStore.php`** — an empty subclass of
+  `laravel-core`'s `Gingerminds\LaravelCore\Services\Filters\FilterStore`
+  (which carries the actual request-scoped array holder implementing
+  `FilterStoreInterface`); it exists only so the container can resolve
+  Search's own store instance separately from other resources'. Written by
+  `SearchResultProvider` and read back by `InjectSearchFiltersMiddleware`
+  (bound `singleton()` in `LaravelCmsServiceProvider::register()` — without
+  that, each side gets its own instance and the middleware only ever sees an
+  empty store).
+- **`Http/Middleware/Api/InjectSearchFiltersMiddleware.php`** — extends
+  `laravel-core`'s
+  `Gingerminds\LaravelCore\Http\Middleware\Api\AbstractInjectFiltersMiddleware`,
+  registered globally onto every api-platform route
   (`config('api-platform.routes.middleware')`); a no-op whenever the store is
   empty (only `/search-results` ever populates it — see [API](#api) below),
-  otherwise merges a `filters` key into the JSON response body.
+  otherwise merges a `filters` key into the JSON response body. See
+  [laravel-core's facets doc](../../gingerminds-laravel-core/docs/partials/facets.md#exposing-computed-filters-through-the-api)
+  for the shared implementation.
 
 ## `search_resources`
 

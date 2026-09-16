@@ -25,6 +25,7 @@ use Gingerminds\LaravelCore\Models\SearchableModelInterface;
 use Gingerminds\LaravelCore\Models\Trait\CacheableResourceTrait;
 use Gingerminds\LaravelCore\Models\Trait\EagerLoadableModelTrait;
 use Gingerminds\LaravelMultisite\Models\Site\SiteContextedModelTrait;
+use Gingerminds\LaravelMultisite\Models\Trait\SyncsTranslationsInterface;
 use Gingerminds\LaravelMultisite\Models\Trait\TranslatableModelTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -149,7 +150,8 @@ class Page extends Model implements
     EagerLoadableModelInterface,
     CacheableResourceInterface,
     PubliclySearchableInterface,
-    ExcludableFromSearchInterface
+    ExcludableFromSearchInterface,
+    SyncsTranslationsInterface
 {
     use CacheableResourceTrait;
     use EagerLoadableModelTrait;
