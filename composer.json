@@ -16,7 +16,7 @@
     "require": {
         "php": "^8.4",
         "gingerminds/laravel-core": "^4.7",
-        "gingerminds/laravel-media-manager": "^6.3",
+        "gingerminds/laravel-media-manager": "^6.4",
         "gingerminds/laravel-multisite": "^2.12"
     },
     "config": {
