@@ -1,28 +1,3 @@
-{{--
-    Renders one schema field's input, whatever its nesting: a top-level
-    block field (name="data[title]") or a `repeater` row's sub-field
-    (name="data[cards][0][title]") — extracted from form.blade.php so
-    `repeater.blade.php` can reuse the exact same per-type rendering for a
-    row's sub-fields instead of duplicating the switch. Never included
-    directly for a `repeater` field itself (form.blade.php/repeater.blade.php
-    handle that case before reaching here).
-
-    Expects, precomputed by the caller (see form.blade.php/repeater.blade.php):
-    - $field: the schema entry (name, type, label, ...)
-    - $value: the field's current value
-    - $name: the full bracketed input name, e.g. "data[title]" or
-      "data[cards][0][title]" (or "data[cards][__INDEX__][title]" inside the
-      row <template>, replaced client-side — see repeater.js)
-    - $inputId: a matching unique id, underscore-joined, e.g.
-      "cms_block_field_title" or "cms_block_field_cards_0_title"
-
-    Two different id schemes coexist below, both inherited unchanged from
-    the original flat-only form.blade.php: a component taking `:id`/`name`
-    separately (wysiwyg, media, file, default) uses $inputId/$name as-is;
-    textarea/select/toggle have no separate `name` prop and use $name
-    (the bracketed string) as their single `id` — doubling as name — since
-    that's what those three components' own markup key off internally.
---}}
 @php use Gingerminds\LaravelCore\Models\EagerLoadableModelInterface; @endphp
 @php use Gingerminds\LaravelMediaManager\Resolver\ResourceResolver as MediaResourceResolver; @endphp
 @switch($field['type'] ?? 'text')
@@ -63,10 +38,6 @@
         @break
 
     @case('toggle')
-        {{-- The toggle component renders its own hidden "0" fallback + the
-             checkbox under this one name — `new FormData(form)`
-             (add-block.js) resolves the pair using plain HTML form
-             semantics, no custom JS collection needed. --}}
         <x-gingerminds-core::form.inputs.toggle
             id="{{ $name }}"
             :label="$field['label']"
@@ -80,10 +51,6 @@
             $mediaModelClass = MediaResourceResolver::model('media');
             $isMultipleMedia = (bool) ($field['multiple'] ?? false);
 
-            // media-select.blade.php's $normalizeItem reads
-            // thumbnail_reference/file_reference/etc. below, all accessors
-            // that touch `file`/`thumbnail` directly — without this, every
-            // selected media lazy-loads both on every block field rendered.
             $mediaEagerLoads = is_subclass_of($mediaModelClass, EagerLoadableModelInterface::class)
                 ? $mediaModelClass::getEagerLoads()
                 : [];
@@ -92,12 +59,6 @@
                 ? $mediaModelClass::query()->with($mediaEagerLoads)->whereIn('id', array_filter((array) $value))->get()
                 : (empty($value) ? null : $mediaModelClass::query()->with($mediaEagerLoads)->find($value));
 
-            // `laravel-multisite` is a required dependency of this package
-            // (composer.json), so resolving the full language universe here
-            // is safe in any project — the media-select field itself only
-            // shows the "All languages"/"None"/codes hint when the resolved
-            // Media model actually exposes a `language_isos` property
-            // (project-specific), so this is a no-op wherever it doesn't.
             $languageModelClass = \Gingerminds\LaravelMultisite\Resolver\ResourceResolver::model('language');
             $allLanguageIsos    = $languageModelClass::query()->pluck('iso')->all();
         @endphp
@@ -111,27 +72,12 @@
             :size="$size"
             :category-codes="$field['category_codes'] ?? []"
             :languages="$allLanguageIsos"
+            :endpoint="$field['endpoint'] ?? null"
+            :category-endpoint="$field['category_endpoint'] ?? null"
         />
         @break
 
     @case('file')
-        {{-- Exclusive upload (BlockFileFieldSync), not the shared media
-             library — see docs/Blocks.md. The hidden input below carries
-             the current File id forward across a save that doesn't touch
-             this field; sharing its name with the file input below is safe
-             (Laravel keeps $_POST/$_FILES separate even under an identical
-             key), and lets BlockFileFieldSync::sync() always know the
-             "old" file regardless of what else was submitted — same for a
-             repeater row's own image, addressed as
-             data.cards.{index}.image.
-
-             `accept` mirrors the field's `mimes` schema key
-             (BlockFieldValidator::fileRules() — same default: images only
-             when `mimes` is omitted, unrestricted when explicitly set to
-             null/[]), so the browser's file picker and the server-side
-             validation never disagree. An explicit `accept` key overrides
-             this when the HTML hint should differ from the validation
-             patterns. --}}
         @php
             $existingFileModel = is_string($value) && $value !== ''
                 ? \Gingerminds\LaravelMediaManager\Models\File\File::query()->find($value)
