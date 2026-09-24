@@ -25,7 +25,7 @@
                     label="{{ __('gingerminds-cms::translation.form.title') }}"
                     :required="$required"
                     name="translations[{{ $language->id }}][title]"
-                    value="{{ old('translations.'.$language->id.'.title', $translation?->title) }}"
+                    :value="old('translations.'.$language->id.'.title', $translation?->title)"
                     size="xl"
             />
         </div>
@@ -38,7 +38,7 @@
                     label="{{ __('gingerminds-cms::translation.form.slug') }}"
                     :required="false"
                     name="translations[{{ $language->id }}][slug]"
-                    value="{{ old('translations.'.$language->id.'.slug', $translation?->slug) }}"
+                    :value="old('translations.'.$language->id.'.slug', $translation?->slug)"
                     prefix="/{{ $categoryPath }}{{ '' !== $categoryPath ? '/' : '' }}"
                     size="xl"
                     data-slug-source="#translations_{{ $language->id }}_title"

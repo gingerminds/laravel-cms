@@ -6,7 +6,7 @@
                         id="code"
                         :label="__('gingerminds-core::translation.form.code')"
                         :required="true"
-                        value="{{ old('name', isset($menuItem) ? $menuItem->code : null) }}"
+                        :value="old('name', isset($menuItem) ? $menuItem->code : null)"
                     />
             </div>
         </div>

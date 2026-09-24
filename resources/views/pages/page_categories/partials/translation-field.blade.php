@@ -6,7 +6,7 @@
                     label="{{ __('gingerminds-cms::translation.page_categories.form.name') }}"
                     :required="$required"
                     name="translations[{{ $language->id }}][name]"
-                    value="{{ old('translations.'.$language->id.'.name', $translation?->name) }}"
+                    :value="old('translations.'.$language->id.'.name', $translation?->name)"
                     size="xl"
             />
         </div>
@@ -16,10 +16,10 @@
             @endphp
             <x-gingerminds-core::form.inputs.basic
                     id="translations_{{ $language->id }}_prefix"
-                    label="{{ __('gingerminds-cms::translation.page_categories.form.prefix') }}"
+                    :label="__('gingerminds-cms::translation.page_categories.form.prefix')"
                     :required="false"
                     name="translations[{{ $language->id }}][prefix]"
-                    value="{{ old('translations.'.$language->id.'.prefix', $translation?->prefix) }}"
+                    :value="old('translations.'.$language->id.'.prefix', $translation?->prefix)"
                     prefix="/{{ $parentPath }}{{ '' !== $parentPath ? '/' : '' }}"
                     suffix="/"
                     :helper="__('gingerminds-cms::translation.page_categories.form.prefix_hint')"
