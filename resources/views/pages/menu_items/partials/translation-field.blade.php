@@ -4,7 +4,7 @@
         label="{{ __('gingerminds-core::translation.form.name') }}"
         :required="$required"
         name="translations[{{ $language->id }}][name]"
-        value="{{ old('translations.'.$language->id.'.name', $translation?->name) }}"
+        :value="old('translations.'.$language->id.'.name', $translation?->name)"
     />
 </div>
 <div class="row mb-3">
@@ -14,7 +14,7 @@
         label="{{ __('gingerminds-cms::translation.form.url') }}"
         :required="false"
         name="translations[{{ $language->id }}][url]"
-        value="{{ old('translations.'.$language->id.'.url', $translation?->url) }}"
+        :value="old('translations.'.$language->id.'.url', $translation?->url)"
     />
 </div>
 <div class="row">
