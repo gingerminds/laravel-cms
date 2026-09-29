@@ -264,7 +264,7 @@ interface ReferenceFieldResolver
 Built in by default:
 
 - `file` → `Blocks\Reference\FileReferenceResolver`, resolving to `{id, url, thumbnail_url, mime_type, original_name, size, is_image}` (`thumbnail_url` is `null` for non-images).
-- `media` → `Blocks\Reference\MediaReferenceResolver`, resolving to the same shape as `Media::GROUP_LIST` (`{id, name, file_reference, file_size, thumbnail_reference, thumbnail_size}`, an array of these when `multiple`) — deliberately reusing those field names rather than inventing a dedicated shape, per the doc's design, so a media embedded in a block matches the media list endpoint.
+- `media` → `Blocks\Reference\MediaReferenceResolver`, resolving to the same shape as `Media::GROUP_LIST` (`{id, name, file_reference, file_size, file_type, thumbnail_reference, thumbnail_size}`, an array of these when `multiple`) — deliberately reusing those field names rather than inventing a dedicated shape, per the doc's design, so a media embedded in a block matches the media list endpoint.
 
 A project introducing its own reference field type (a field pointing at one of its own models, say) implements `ReferenceFieldResolver` and adds one entry to `gingerminds-cms.reference_resolvers` — nothing in `ContentReferenceResolver` needs editing, matching the `blocks`/`block_paths` override philosophy used everywhere else in this system.
 
