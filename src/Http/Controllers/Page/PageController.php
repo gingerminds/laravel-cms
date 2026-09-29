@@ -97,7 +97,7 @@ class PageController extends AbstractController
         /** @var PageTranslation|null $translation */
         $translation = $page->currentTranslation;
 
-        return redirect()->route('gingerminds-cms.pages.index')
+        return $this->redirectAfterStore('gingerminds-cms.pages', $page->id)
             ->with('success', __('gingerminds-core::translation.successfully_created', [
                 'model' => __(self::LABEL_S)
                     . ' '
@@ -114,7 +114,7 @@ class PageController extends AbstractController
         /** @var PageTranslation|null $translation */
         $translation = $page->currentTranslation;
 
-        return redirect()->route('gingerminds-cms.pages.edit', $page->id)
+        return $this->redirectAfterUpdate('gingerminds-cms.pages', $page->id)
             ->with('success', __('gingerminds-core::translation.successfully_updated', [
                 'model' => __(self::LABEL_S)
                     . ' '

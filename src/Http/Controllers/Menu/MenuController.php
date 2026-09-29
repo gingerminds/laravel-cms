@@ -61,7 +61,7 @@ class MenuController extends AbstractController
         /** @var Menu $menu */
         $menu = $this->repository->update($request, new Menu());
 
-        return redirect()->route('gingerminds-cms.menus.index')
+        return $this->redirectAfterStore('gingerminds-cms.menus', $menu->id)
             ->with('success', __('gingerminds-core::translation.successfully_created', [
                 'model' => __(self::LABEL_S)
                     . ' '
@@ -75,7 +75,7 @@ class MenuController extends AbstractController
 
         $this->repository->update($request, $menu);
 
-        return redirect()->route('gingerminds-cms.menus.edit', $menu->id)
+        return $this->redirectAfterUpdate('gingerminds-cms.menus', $menu->id)
             ->with('success', __('gingerminds-core::translation.successfully_updated', [
                 'model' => __(self::LABEL_S)
                     . ' '
