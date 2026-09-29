@@ -88,9 +88,11 @@ class MenuItemController extends AbstractController
         /** @var MenuItemTranslation|null $translation */
         $translation = $menuItem->currentTranslation;
 
-        return redirect()->route('gingerminds-cms.menu_items.index', [
-            'menu' => $menu->id,
-        ])
+        return $this->redirectAfterStore(
+            'gingerminds-cms.menu_items',
+            ['menu' => $menu->id, 'menuItem' => $menuItem->id],
+            ['menu' => $menu->id]
+        )
             ->with('success', __('gingerminds-core::translation.successfully_created', [
                 'model' => __(self::LABEL_S)
                     . ' '
@@ -107,10 +109,11 @@ class MenuItemController extends AbstractController
         /** @var MenuItemTranslation|null $translation */
         $translation = $menuItem->currentTranslation;
 
-        return redirect()->route('gingerminds-cms.menu_items.edit', [
-            'menu' => $menu->id,
-            'menuItem' => $menuItem->id,
-        ])
+        return $this->redirectAfterUpdate(
+            'gingerminds-cms.menu_items',
+            ['menu' => $menu->id, 'menuItem' => $menuItem->id],
+            ['menu' => $menu->id]
+        )
             ->with('success', __('gingerminds-core::translation.successfully_updated', [
                 'model' => __(self::LABEL_S)
                     . ' '

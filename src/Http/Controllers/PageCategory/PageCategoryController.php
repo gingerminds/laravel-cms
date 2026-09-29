@@ -76,7 +76,7 @@ class PageCategoryController extends AbstractController
         /** @var PageCategory $pageCategory */
         $pageCategory = $this->repository->update($request, new PageCategory());
 
-        return redirect()->route('gingerminds-cms.page-categories.index')
+        return $this->redirectAfterStore('gingerminds-cms.page-categories', $pageCategory->id)
             ->with('success', __('gingerminds-core::translation.successfully_created', [
                 'model' => __(self::LABEL_S)
                     . ' '
@@ -90,7 +90,7 @@ class PageCategoryController extends AbstractController
 
         $this->repository->update($request, $pageCategory);
 
-        return redirect()->route('gingerminds-cms.page-categories.edit', $pageCategory)
+        return $this->redirectAfterUpdate('gingerminds-cms.page-categories', $pageCategory->id)
             ->with('success', __('gingerminds-core::translation.successfully_updated', [
                 'model' => __(self::LABEL_S)
                     . ' '
