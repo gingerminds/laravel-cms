@@ -1,4 +1,7 @@
-@php use Gingerminds\LaravelCms\State\Page\Status\Draft; @endphp
+@php
+    use Gingerminds\LaravelCms\State\Page\Status\Draft;
+    use Gingerminds\LaravelCore\Support\DisplayTimezone;
+@endphp
 <div class="col-lg-8">
     <div class="card">
         <div class="card-body">
@@ -83,10 +86,10 @@
                     @endforeach
                 </x-gingerminds-core::form.inputs.select>
                 @if(isset($page) && null !== $page->published_at)
-                    <p><br><strong>@lang('gingerminds-cms::translation.form.published_at')&nbsp;:</strong> {{ $page->published_at }}</p>
+                    <p><br><strong>@lang('gingerminds-cms::translation.form.published_at')&nbsp;:</strong> {{ DisplayTimezone::toDisplay($page->published_at)?->toDateTimeString() }}</p>
                 @endif
                 @if(isset($page) && null !== $page->archived_at)
-                    <p><br><strong>@lang('gingerminds-cms::translation.form.archived_at')&nbsp;:</strong> {{ $page->archived_at }}</p>
+                    <p><br><strong>@lang('gingerminds-cms::translation.form.archived_at')&nbsp;:</strong> {{ DisplayTimezone::toDisplay($page->archived_at)?->toDateTimeString() }}</p>
                 @endif
             </div>
         </div>
