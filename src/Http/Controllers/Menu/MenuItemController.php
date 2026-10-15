@@ -125,8 +125,12 @@ class MenuItemController extends AbstractController
     {
         $this->authorize('update', ResourceResolver::model('menu_item'));
 
-        foreach ($request->input('ids') as $position => $id) {
-            $menu->items()->where('id', $id)->update(['position' => $position]);
+        $ids   = $request->input('ids');
+        $items = $menu->items()->whereKey($ids)->get()->keyBy('id');
+
+        // Saved one by one so `eloquent.saved` fires and flushes the parent Menu cache.
+        foreach ($ids as $position => $id) {
+            $items->get($id)?->update(['position' => $position]);
         }
 
         return response()->json(['success' => true]);
