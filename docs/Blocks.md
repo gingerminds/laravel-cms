@@ -232,7 +232,7 @@ Orchestration:
 3. **Edit** — reopens step 2 directly (the type is locked once a block is created), pre-filled from the block's stored data.
 4. **Remove** — after a confirmation prompt, removes the block from the canvas.
 5. **Reorder** — Sortable.js on the block list; only resyncs the hidden input, no server round-trip.
-6. **Copy structure** — a per-canvas "Copy structure" button opens a language picker (built from every other `.cms-blocks-canvas` already in the DOM — every language tab is rendered at once, see `gingerminds-multisite`'s translations component, so no ajax round-trip is needed here either). If the target language's canvas is empty, the copy happens immediately; if it already has blocks, a confirmation is shown first (copying replaces its content entirely). The copy clones each block's already-rendered preview markup and regenerates its `uid`.
+6. **Copy structure** — a per-canvas "Copy structure" button opens a language picker (built from every other `.cms-blocks-canvas` already in the DOM — every language tab is rendered at once, see `gingerminds-multisite`'s translations component, so no ajax round-trip is needed here either). If the target language's canvas is empty, the copy happens immediately; if it already has blocks, a confirmation is shown first (copying replaces its content entirely). The copy posts the source blocks to `pages.blocks.duplicate` (`PageBlockController::duplicate()`), which regenerates each `uid`, duplicates every `file`-type `File` via `BlockFileFieldSync::duplicateFiles()` (a `file` field is exclusive to its block, so the copy must not share it with the source) and returns freshly rendered previews.
 
 ## Full revalidation on page save
 

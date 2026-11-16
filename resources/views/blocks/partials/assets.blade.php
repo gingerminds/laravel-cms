@@ -17,6 +17,7 @@
         window.cmsBlocksConfig = {
             formUrlTemplate: @json(route('gingerminds-cms.pages.blocks.form', ['key' => '__KEY__'])),
             validateUrlTemplate: @json(route('gingerminds-cms.pages.blocks.validate', ['key' => '__KEY__'])),
+            duplicateUrl: @json(route('gingerminds-cms.pages.blocks.duplicate')),
             loadingMessage: @json(__('gingerminds-cms::translation.blocks.message.loading')),
             loadErrorMessage: @json(__('gingerminds-cms::translation.blocks.message.load_error')),
             validateErrorMessage: @json(__('gingerminds-cms::translation.blocks.message.validate_error')),
