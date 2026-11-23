@@ -71,5 +71,10 @@ Route::middleware(['web', 'gingerminds-core.auth'])
             [ResourceResolver::controller('page_block'), 'validateBlock']
         )->name('pages.blocks.validate');
 
+        Route::post(
+            'pages/blocks/duplicate',
+            [ResourceResolver::controller('page_block'), 'duplicate']
+        )->name('pages.blocks.duplicate');
+
         Route::resource('page-categories', ResourceResolver::controller('page_category'));
     });

@@ -1,13 +1,13 @@
 // "Copy structure" — reuse another language's block layout instead of
-// rebuilding it block by block (see docs/Blocks.md). Entirely client-side:
-// every language's canvas is already in the DOM at once, and each block's
-// preview markup is already fully rendered there, so cloning is enough —
-// no ajax round-trip, no re-fetch of previews.
+// rebuilding it block by block (see docs/Blocks.md). Every language's canvas
+// is already in the DOM at once, so the source blocks' data is read locally;
+// one ajax call gives the copies their own uploaded files and fresh previews.
 import { Modal } from 'bootstrap';
-import { refreshInsertSlots, syncHiddenInput } from './dom.js';
+import { buildBlockItem, readBlockData, refreshInsertSlots, syncHiddenInput } from './dom.js';
 
 let copyTargetCanvas = null; // canvas that triggered "copy structure"
 let copySourceCanvas = null; // language picked as the source, once chosen
+let copyInFlight = false;
 
 export function initCopyStructureFlow() {
     document.querySelectorAll('.cms-blocks-copy-trigger').forEach((trigger) => {
@@ -108,37 +108,49 @@ function confirmCopyStructure() {
 function performCopyStructure(sourceCanvas, targetCanvas) {
     const sourceList = sourceCanvas.querySelector('[data-cms-blocks-list]');
     const targetList = targetCanvas.querySelector('[data-cms-blocks-list]');
-    if (!sourceList || !targetList) return;
+    if (!sourceList || !targetList || copyInFlight) return;
 
-    targetList.querySelectorAll(':scope > [data-cms-block], :scope > .cms-block-insert-slot')
-        .forEach((el) => el.remove());
+    targetCanvas.querySelector('.cms-blocks-copy-error')?.remove();
+    copyInFlight = true;
 
-    // uids are regenerated so the two canvases don't share block identity
-    // even though their content briefly matches right after the copy.
-    Array.from(sourceList.querySelectorAll(':scope > [data-cms-block]')).forEach((item) => {
-        const clone = item.cloneNode(true);
-        const newUid = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
+    const blocks = Array.from(sourceList.querySelectorAll(':scope > [data-cms-block]'))
+        .map(readBlockData)
+        .map(({ type, data }) => ({ type, data }));
 
-        clone.dataset.uid = newUid;
+    // The server duplicates each block's uploaded files so the target
+    // language owns its own copies (a shared File would be deleted from
+    // under the source when the copied block is replaced or removed).
+    fetch(window.cmsBlocksConfig?.duplicateUrl, {
+        method: 'POST',
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+        },
+        body: JSON.stringify({ blocks }),
+    })
+        .then((response) => {
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return response.json();
+        })
+        .then(({ blocks: payloads }) => {
+            targetList.querySelectorAll(':scope > [data-cms-block], :scope > .cms-block-insert-slot')
+                .forEach((el) => el.remove());
 
-        const script = clone.querySelector('.cms-block-data');
-        if (script) {
-            try {
-                const data = JSON.parse(script.textContent || '{}');
-                data.uid = newUid;
-                script.textContent = JSON.stringify(data);
-            } catch (e) {
-                // Leave the script tag's stale JSON as-is — readBlockData()
-                // already falls back to dataset-derived values if this ever
-                // fails to parse. Still surfaced so a real corruption case
-                // doesn't silently vanish.
-                console.warn('copy-structure: failed to re-tag cloned block data with new uid', e);
-            }
-        }
+            payloads.forEach((payload) => targetList.appendChild(buildBlockItem(payload)));
 
-        targetList.appendChild(clone);
-    });
+            syncHiddenInput(targetCanvas);
+            refreshInsertSlots(targetCanvas);
+        })
+        .catch((e) => {
+            console.error('copy-structure: duplication failed', e);
 
-    syncHiddenInput(targetCanvas);
-    refreshInsertSlots(targetCanvas);
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-danger cms-blocks-copy-error';
+            alert.textContent = window.cmsBlocksConfig?.validateErrorMessage || 'Erreur, réessayez.';
+            targetList.before(alert);
+        })
+        .finally(() => {
+            copyInFlight = false;
+        });
 }

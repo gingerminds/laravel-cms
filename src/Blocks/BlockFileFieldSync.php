@@ -8,6 +8,8 @@ use Gingerminds\LaravelMediaManager\Models\File\File;
 use Gingerminds\LaravelMediaManager\Services\File\FileUploadService;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class BlockFileFieldSync
 {
@@ -112,6 +114,73 @@ class BlockFileFieldSync
         }
 
         return $currentValue === '' ? null : $currentValue;
+    }
+
+    /**
+     * Gives the block its own copy of every `file`-type File it references
+     * (a `file` field owns its File exclusively, so a block copied into
+     * another language must not keep pointing at the source's File).
+     *
+     * @param array<string, mixed> $data
+     * @return array<string, mixed>
+     */
+    public static function duplicateFiles(BlockInterface $block, array $data): array
+    {
+        return self::duplicateFields($block->fields(), $data);
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $fields
+     * @param array<string, mixed> $data
+     * @return array<string, mixed>
+     */
+    private static function duplicateFields(array $fields, array $data): array
+    {
+        foreach ($fields as $field) {
+            $name = $field['name'];
+            $type = $field['type'] ?? null;
+            $value = $data[$name] ?? null;
+
+            if ($type === 'file' && is_string($value) && $value !== '') {
+                $data[$name] = self::duplicateFile($value);
+            }
+
+            if ($type === 'repeater' && is_array($value)) {
+                foreach ($value as $index => $row) {
+                    if (is_array($row)) {
+                        $data[$name][$index] = self::duplicateFields($field['fields'] ?? [], $row);
+                    }
+                }
+            }
+        }
+
+        return $data;
+    }
+
+    private static function duplicateFile(string $id): ?string
+    {
+        $source = File::query()->find($id);
+
+        if (!$source instanceof File || !Storage::disk($source->disk)->exists($source->path)) {
+            return null;
+        }
+
+        $extension = pathinfo($source->path, PATHINFO_EXTENSION);
+        $newPath   = self::UPLOAD_FOLDER . '/' . Str::uuid() . ($extension !== '' ? ".$extension" : '');
+
+        if (!Storage::disk($source->disk)->copy($source->path, $newPath)) {
+            return null;
+        }
+
+        $copy = File::create([
+            'disk'          => $source->disk,
+            'path'          => $newPath,
+            'mime_type'     => $source->mime_type,
+            'original_name' => $source->original_name,
+            'size'          => $source->size,
+        ]);
+
+        return (string) $copy->getKey();
     }
 
     /**

@@ -12,6 +12,7 @@ use Gingerminds\LaravelCore\Http\Controllers\AbstractController;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 /**
  * Ajax endpoints powering the block canvas (add/edit modal, step 2 — see
@@ -92,5 +93,38 @@ class PageBlockController extends AbstractController
             'data' => $data,
             'preview' => $preview,
         ]);
+    }
+
+    /**
+     * Copy-structure endpoint: returns each submitted block with its own
+     * duplicated File(s) and a freshly rendered preview, under a new uid.
+     */
+    public function duplicate(Request $request): JsonResponse
+    {
+        $this->authorize('update', ResourceResolver::model('page'));
+
+        $submitted = $request->validate([
+            'blocks'        => ['present', 'array'],
+            'blocks.*.type' => ['required', 'string'],
+            'blocks.*.data' => ['nullable', 'array'],
+        ])['blocks'];
+
+        $payloads = [];
+
+        foreach ($submitted as $item) {
+            $block = BlockRequestSupport::resolveOrAbort($item['type']);
+            $data  = BlockFileFieldSync::duplicateFiles($block, $item['data'] ?? []);
+            $uid   = (string) Str::uuid();
+
+            $payloads[] = [
+                'uid' => $uid,
+                'type' => $block->key(),
+                'label' => $block->label(),
+                'data' => $data,
+                'preview' => BlockRequestSupport::renderView($block->previewView(), $block, $uid, $data),
+            ];
+        }
+
+        return response()->json(['blocks' => $payloads]);
     }
 }
