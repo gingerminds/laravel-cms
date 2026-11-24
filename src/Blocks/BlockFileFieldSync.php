@@ -89,7 +89,8 @@ class BlockFileFieldSync
     /**
      * `syncFields()`'s `file`-type branch: upload a new file, honor an
      * explicit "remove" flag, or fall back to whatever was already there
-     * (normalizing an empty-string value to `null`).
+     * (normalizing an empty-string value to `null`). The replaced File is
+     * left to `pruneOrphanedFiles()` on save, which knows the other languages.
      */
     private static function syncFileField(
         Request $request,
@@ -100,16 +101,11 @@ class BlockFileFieldSync
         /** @var UploadedFile|null $uploaded */
         $uploaded = $request->file($inputKey);
 
-        $oldId = $request->input($inputKey);
-        $old   = is_string($oldId) && $oldId !== '' ? File::query()->find($oldId) : null;
-
         if ($uploaded instanceof UploadedFile) {
-            return $uploadService->replace($uploaded, $old, self::UPLOAD_FOLDER)->id;
+            return $uploadService->store($uploaded, self::UPLOAD_FOLDER)->id;
         }
 
         if ($request->boolean("{$inputKey}_remove")) {
-            $uploadService->delete($old);
-
             return null;
         }
 
