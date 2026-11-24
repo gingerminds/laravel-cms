@@ -13,6 +13,7 @@ use Gingerminds\LaravelMultisite\Services\Context\SiteContext;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 trait SyncsTranslatableResourceTrait
@@ -190,6 +191,7 @@ trait SyncsTranslatableResourceTrait
 
         // getAttribute(), same reasoning as syncStatus() above.
         $existingTranslations = $resource->getAttribute('translations')->keyBy('language_id');
+        $keptBlocks           = $this->keptBlocks($translations, $existingTranslations);
 
         foreach ($translations as $languageId => $fields) {
             $translation = $existingTranslations->get($languageId);
@@ -198,10 +200,7 @@ trait SyncsTranslatableResourceTrait
                 $fields = $this->syncTranslationFile($request, $translation, $languageId, $field, $fields);
             }
 
-            BlockFileFieldSync::pruneOrphanedFiles(
-                $translation?->content,
-                $fields['content'] ?? []
-            );
+            BlockFileFieldSync::pruneOrphanedFiles($translation?->content, $keptBlocks);
 
             $fields['site_id'] = $resource->getAttribute('site_id');
 
@@ -213,5 +212,35 @@ trait SyncsTranslatableResourceTrait
         }
 
         return $translations;
+    }
+
+    /**
+     * Blocks of every language once saved: a File still used by another
+     * language (e.g. after a copy structure) must not be pruned.
+     *
+     * @param  array<int|string, array<string, mixed>>  $translations
+     * @param  Collection<int|string, Model>  $existingTranslations
+     * @return list<array<string, mixed>>
+     */
+    private function keptBlocks(array $translations, Collection $existingTranslations): array
+    {
+        $contents = $existingTranslations->map(static fn (Model $translation) => $translation->getAttribute('content'))
+            ->all();
+
+        foreach ($translations as $languageId => $fields) {
+            if (array_key_exists('content', $fields)) {
+                $contents[$languageId] = $fields['content'];
+            }
+        }
+
+        $blocks = [];
+
+        foreach ($contents as $content) {
+            if (is_array($content)) {
+                array_push($blocks, ...array_values($content));
+            }
+        }
+
+        return $blocks;
     }
 }
